@@ -20,6 +20,18 @@ enum RoleName {
   SUPPORT
 }
 
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id           Int        @id @default(autoincrement())
   uuid         String     @unique @default(uuid()) @db.Uuid
@@ -31,8 +43,10 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  wallet    Wallet?
-  userRoles UserRole[]
+  wallet      Wallet?
+  userRoles   UserRole[]
+  courses     Course[]     @relation("CourseTeacher")
+  enrollments Enrollment[] @relation("EnrollmentStudent")
 }
 
 model Wallet {
@@ -94,4 +108,52 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
+}
+
+model Course {
+  id           Int          @id @default(autoincrement())
+  uuid         String       @unique @default(uuid()) @db.Uuid
+  title        String
+  description  String
+  thumbnailUrl String?
+  price        Decimal      @default(0) @db.Decimal(18, 2)
+  level        CourseLevel
+  status       CourseStatus @default(DRAFT)
+  teacherId    Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  teacher     User         @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  videos      Video[]
+  enrollments Enrollment[]
+}
+
+model Video {
+  id              Int      @id @default(autoincrement())
+  uuid            String   @unique @default(uuid()) @db.Uuid
+  courseId        Int
+  title           String
+  description     String?
+  videoUrl        String
+  durationSeconds Int      @default(0)
+  orderIndex      Int
+  isFree          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  studentId Int
+  courseId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student User   @relation("EnrollmentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
 }

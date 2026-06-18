@@ -25,13 +25,36 @@ const permissions = [
   'teacher.panel.access',
   'student.panel.access',
   'support.panel.access',
+  'courses.read',
+  'courses.create',
+  'courses.update',
+  'courses.delete',
+  'videos.read',
+  'videos.create',
+  'videos.update',
+  'videos.delete',
+  'enrollments.read',
+  'enrollments.create',
+  'enrollments.delete',
 ];
 
 const rolePermissions: Record<RoleName, string[]> = {
   [RoleName.ADMIN]: permissions,
-  [RoleName.TEACHER]: ['teacher.panel.access', 'student.panel.access', 'users.read'],
-  [RoleName.STUDENT]: ['student.panel.access', 'auth.me'],
-  [RoleName.SUPPORT]: ['support.panel.access', 'users.read', 'wallets.read'],
+  [RoleName.TEACHER]: [
+    'teacher.panel.access',
+    'student.panel.access',
+    'users.read',
+    'courses.read',
+    'courses.create',
+    'courses.update',
+    'videos.read',
+    'videos.create',
+    'videos.update',
+    'videos.delete',
+    'enrollments.read',
+  ],
+  [RoleName.STUDENT]: ['student.panel.access', 'auth.me', 'courses.read', 'videos.read', 'enrollments.create'],
+  [RoleName.SUPPORT]: ['support.panel.access', 'users.read', 'wallets.read', 'courses.read', 'enrollments.read'],
 };
 
 async function main() {

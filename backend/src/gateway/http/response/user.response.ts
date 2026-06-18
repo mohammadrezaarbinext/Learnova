@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserStatus } from '@prisma/client';
+import { EnrollmentResponse } from './enrollment.response';
 import { WalletResponse } from './wallet.response';
 
 export class UserResponse {
@@ -23,6 +24,9 @@ export class UserResponse {
 
   @ApiPropertyOptional({ type: WalletResponse, nullable: true })
   wallet: WalletResponse | null;
+
+  @ApiProperty({ type: [EnrollmentResponse] })
+  enrollments: EnrollmentResponse[];
 
   @ApiProperty({ example: ['STUDENT'], isArray: true })
   roles: string[];

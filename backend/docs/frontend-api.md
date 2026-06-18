@@ -68,6 +68,29 @@ LearnNova OTP [REGISTER] for +989121234567: 123456
     "createdAt": "2026-06-18T08:45:00.000Z",
     "updatedAt": "2026-06-18T08:45:00.000Z"
   },
+  "enrollments": [
+    {
+      "id": 1,
+      "uuid": "7c93df3c-c2f0-4f7f-88d4-78a6fd2a3e41",
+      "studentId": 1,
+      "courseId": 1,
+      "course": {
+        "id": 1,
+        "uuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+        "title": "NestJS Foundations",
+        "description": "Build production-ready APIs with NestJS.",
+        "thumbnailUrl": null,
+        "price": "0.00",
+        "level": "BEGINNER",
+        "status": "PUBLISHED",
+        "teacherId": 2,
+        "createdAt": "2026-06-18T08:45:00.000Z",
+        "updatedAt": "2026-06-18T08:45:00.000Z"
+      },
+      "createdAt": "2026-06-18T08:45:00.000Z",
+      "updatedAt": "2026-06-18T08:45:00.000Z"
+    }
+  ],
   "roles": ["STUDENT"],
   "permissions": ["student.panel.access", "auth.me"],
   "createdAt": "2026-06-18T08:45:00.000Z",
@@ -252,7 +275,7 @@ Auth:
 Authorization: Bearer <accessToken>
 ```
 
-Response: user object.
+Response: user object with wallet, roles, permissions, and the current user's enrollments. Enrollment course objects do not include videos.
 
 Required permission:
 
@@ -407,6 +430,217 @@ Request:
 
 Response: updated `Wallet`
 
+## Course Endpoints
+
+### List Courses
+
+```http
+GET /courses
+```
+
+Public. Returns published courses by default.
+
+Optional query params:
+
+```text
+search
+level=BEGINNER|INTERMEDIATE|ADVANCED
+status=DRAFT|PUBLISHED|ARCHIVED
+teacherId=<teacherUuid>
+```
+
+### Get Course Details
+
+```http
+GET /courses/:id
+```
+
+Public. `:id` is the course uuid. Includes teacher info only. Videos are not embedded in course responses; call `GET /courses/:courseId/videos` to load videos.
+
+### Create Course
+
+```http
+POST /courses
+```
+
+Required permission:
+
+```text
+courses.create
+```
+
+Request:
+
+```json
+{
+  "title": "NestJS Foundations",
+  "description": "Build production-ready APIs with NestJS.",
+  "thumbnailUrl": "https://cdn.learnnova.test/courses/nestjs.png",
+  "price": "0.00",
+  "level": "BEGINNER",
+  "status": "DRAFT"
+}
+```
+
+Only `TEACHER` or `ADMIN` can create courses. Teacher is current user unless an admin passes `teacherId`.
+
+### Update Course
+
+```http
+PATCH /courses/:id
+```
+
+Required permission:
+
+```text
+courses.update
+```
+
+Teacher can update only own courses. Admin can update any course.
+
+### Delete Course
+
+```http
+DELETE /courses/:id
+```
+
+Required permission:
+
+```text
+courses.delete
+```
+
+### My Teaching Courses
+
+```http
+GET /courses/me/teaching
+```
+
+Required permission:
+
+```text
+courses.read
+```
+
+## Video Endpoints
+
+### List Course Videos
+
+```http
+GET /courses/:courseId/videos
+```
+
+Required permission:
+
+```text
+videos.read
+```
+
+Returns videos ordered by `orderIndex`. `videoUrl` is returned only when the video is free, the user is enrolled, the user is the course teacher, or the user is admin.
+
+### Create Video
+
+```http
+POST /courses/:courseId/videos
+```
+
+Required permission:
+
+```text
+videos.create
+```
+
+Request:
+
+```json
+{
+  "title": "Introduction",
+  "description": "Welcome and course overview.",
+  "videoUrl": "https://cdn.learnnova.test/videos/intro.mp4",
+  "durationSeconds": 420,
+  "orderIndex": 1,
+  "isFree": true
+}
+```
+
+Only course owner teacher or admin can create videos.
+
+### Update Video
+
+```http
+PATCH /videos/:id
+```
+
+Required permission:
+
+```text
+videos.update
+```
+
+### Delete Video
+
+```http
+DELETE /videos/:id
+```
+
+Required permission:
+
+```text
+videos.delete
+```
+
+## Enrollment Endpoints
+
+### Enroll In Course
+
+```http
+POST /courses/:courseId/enroll
+```
+
+Required permission:
+
+```text
+enrollments.create
+```
+
+Enrolls the current user. Duplicate enrollments are rejected. Paid courses enroll directly for now until payment validation is added.
+
+### My Enrollments
+
+```http
+GET /enrollments/me
+```
+
+Returns current user enrollments with course info. Videos are not embedded in enrollment responses.
+
+### Course Enrollments
+
+```http
+GET /enrollments/course/:courseId
+```
+
+Required permission:
+
+```text
+enrollments.read
+```
+
+Teacher can view only own course enrollments. Admin and support can view all.
+
+### Delete Enrollment
+
+```http
+DELETE /enrollments/:id
+```
+
+Required permission:
+
+```text
+enrollments.delete
+```
+
+Admin only for now.
+
 ## Common Errors
 
 Validation error:
@@ -477,6 +711,17 @@ admin.panel.access
 teacher.panel.access
 student.panel.access
 support.panel.access
+courses.read
+courses.create
+courses.update
+courses.delete
+videos.read
+videos.create
+videos.update
+videos.delete
+enrollments.read
+enrollments.create
+enrollments.delete
 ```
 
 Default `STUDENT` permissions:
@@ -484,6 +729,9 @@ Default `STUDENT` permissions:
 ```text
 student.panel.access
 auth.me
+courses.read
+videos.read
+enrollments.create
 ```
 
 ## Local Startup
