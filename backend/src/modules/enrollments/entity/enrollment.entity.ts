@@ -1,32 +1,65 @@
-import { Prisma } from '@prisma/client';
+import { Column, Entity, Index } from 'typeorm';
+import { BaseEntity } from '../../../core/entity/base.entity';
+import { CourseLevel, CourseStatus, toCourseLevel, toCourseStatus } from '../../courses/entity/course.entity';
 
-export const enrollmentWithCourseInclude = Prisma.validator<Prisma.EnrollmentInclude>()({
-  course: {
-    select: {
-      id: true,
-      uuid: true,
-      title: true,
-      description: true,
-      thumbnailUrl: true,
-      price: true,
-      level: true,
-      status: true,
-      teacherId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  },
-});
+export type EnrollmentCourseEntity = {
+  id: number;
+  uuid: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string | null;
+  price: string;
+  level: CourseLevel;
+  status: CourseStatus;
+  teacherId: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-export type EnrollmentEntity = Prisma.EnrollmentGetPayload<{ include: typeof enrollmentWithCourseInclude }>;
+@Entity('Enrollment')
+@Index(['studentId', 'courseId'], { unique: true })
+export class EnrollmentEntity extends BaseEntity {
+  @Index()
+  @Column({ type: 'int' })
+  studentId!: number;
 
-export function serializeEnrollment(enrollment: EnrollmentEntity) {
+  @Index()
+  @Column({ type: 'int' })
+  courseId!: number;
+
+  course?: EnrollmentCourseEntity;
+}
+
+export type DeleteEnrollmentEntity = {
+  id: number;
+  uuid: string;
+  deleted: true;
+};
+
+type DecimalLike = { toString(): string };
+
+type EnrollmentPersistence = Omit<EnrollmentEntity, 'course'> & {
+  course?: (Omit<EnrollmentCourseEntity, 'price' | 'level' | 'status'> & {
+    price: DecimalLike | string | number;
+    level: string;
+    status: string;
+  }) | null;
+};
+
+export function serializeEnrollment(enrollment: EnrollmentPersistence): EnrollmentEntity {
   return {
     id: enrollment.id,
     uuid: enrollment.uuid,
     studentId: enrollment.studentId,
     courseId: enrollment.courseId,
-    course: enrollment.course,
+    course: enrollment.course
+      ? {
+          ...enrollment.course,
+          price: enrollment.course.price?.toString?.() ?? String(enrollment.course.price),
+          level: toCourseLevel(enrollment.course.level),
+          status: toCourseStatus(enrollment.course.status),
+        }
+      : undefined,
     createdAt: enrollment.createdAt,
     updatedAt: enrollment.updatedAt,
   };

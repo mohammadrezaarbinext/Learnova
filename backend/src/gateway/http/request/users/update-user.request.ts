@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { UserStatus } from '@prisma/client';
 import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
+import { UserStatus } from '../../../../modules/users/entity/user.entity';
 
 export class UpdateUserRequest {
   @ApiPropertyOptional()

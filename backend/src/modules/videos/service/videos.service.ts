@@ -3,14 +3,14 @@ import { AuthUser } from '../../../common/types/auth-user.type';
 import { CreateVideoRequest } from '../../../gateway/http/request/videos/create-video.request';
 import { UpdateVideoRequest } from '../../../gateway/http/request/videos/update-video.request';
 import { canManageCourse } from '../../courses/entity/course.entity';
-import { serializeVideo, VideoEntity } from '../entity/video.entity';
+import { DeleteVideoEntity, serializeVideo, VideoCourseEntity, VideoEntity, VideoResponseEntity } from '../entity/video.entity';
 import { VideoRepository } from '../entity/video.repository';
 
 @Injectable()
 export class VideosService {
   constructor(private readonly videoRepository: VideoRepository) {}
 
-  async findByCourse(courseUuid: string, user: AuthUser) {
+  async findByCourse(courseUuid: string, user: AuthUser): Promise<VideoResponseEntity[]> {
     const course = await this.getCourseOrThrow(courseUuid);
     const canViewPrivateVideos = await this.canViewPrivateVideos(course.id, course.teacherId, user);
     const videos = await this.videoRepository.findByCourseUuid(courseUuid);
@@ -18,24 +18,24 @@ export class VideosService {
     return videos.map((video) => serializeVideo(video, canViewPrivateVideos));
   }
 
-  async create(courseUuid: string, dto: CreateVideoRequest, user: AuthUser) {
+  async create(courseUuid: string, dto: CreateVideoRequest, user: AuthUser): Promise<VideoResponseEntity> {
     const course = await this.getCourseOrThrow(courseUuid);
     this.ensureCanManage(course.teacherId, user);
 
     const video = await this.videoRepository.create({
+      courseId: course.id,
       title: dto.title,
       description: dto.description,
       videoUrl: dto.videoUrl,
       durationSeconds: dto.durationSeconds ?? 0,
       orderIndex: dto.orderIndex,
       isFree: dto.isFree ?? false,
-      course: { connect: { id: course.id } },
     });
 
     return serializeVideo(video, true);
   }
 
-  async update(uuid: string, dto: UpdateVideoRequest, user: AuthUser) {
+  async update(uuid: string, dto: UpdateVideoRequest, user: AuthUser): Promise<VideoResponseEntity> {
     const video = await this.getVideoOrThrow(uuid);
     this.ensureCanManage(video.course.teacherId, user);
 
@@ -51,7 +51,7 @@ export class VideosService {
     return serializeVideo(updatedVideo, true);
   }
 
-  async remove(uuid: string, user: AuthUser) {
+  async remove(uuid: string, user: AuthUser): Promise<DeleteVideoEntity> {
     const video = await this.getVideoOrThrow(uuid);
     this.ensureCanManage(video.course.teacherId, user);
     await this.videoRepository.delete(uuid);
@@ -68,7 +68,7 @@ export class VideosService {
     return video;
   }
 
-  private async getCourseOrThrow(uuid: string) {
+  private async getCourseOrThrow(uuid: string): Promise<VideoCourseEntity> {
     const course = await this.videoRepository.findCourseByUuid(uuid);
     if (!course) {
       throw new NotFoundException('Course not found');
@@ -77,13 +77,13 @@ export class VideosService {
     return course;
   }
 
-  private ensureCanManage(teacherId: number, user: AuthUser) {
+  private ensureCanManage(teacherId: number, user: AuthUser): void {
     if (!canManageCourse(user, teacherId)) {
       throw new ForbiddenException('You can manage only your own course videos');
     }
   }
 
-  private async canViewPrivateVideos(courseId: number, teacherId: number, user: AuthUser) {
+  private async canViewPrivateVideos(courseId: number, teacherId: number, user: AuthUser): Promise<boolean> {
     if (user.roles.includes('ADMIN') || user.id === teacherId) {
       return true;
     }

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CourseLevel, CourseStatus } from '@prisma/client';
+import { CourseLevel, CourseStatus } from '../../../modules/courses/entity/course.entity';
 
 class CourseTeacherResponse {
   @ApiProperty({ example: 1 })

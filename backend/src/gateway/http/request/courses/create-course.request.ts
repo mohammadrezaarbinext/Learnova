@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CourseLevel, CourseStatus } from '@prisma/client';
 import { IsDecimal, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { CourseLevel, CourseStatus } from '../../../../modules/courses/entity/course.entity';
 
 export class CreateCourseRequest {
   @ApiProperty({ example: 'NestJS Foundations' })

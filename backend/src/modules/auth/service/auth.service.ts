@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { LoginRequest } from '../../../gateway/http/request/auth/login.request';
 import { ChangePasswordRequest, OtpRequest, RegisterRequest } from '../../../gateway/http/request/auth/register.request';
-import { AuthEntity } from '../entity/auth.entity';
+import { AuthEntity, MessageEntity, OtpEntity } from '../entity/auth.entity';
 import { AuthRepository } from '../entity/auth.repository';
 import { LoginHandler } from '../handler/login.handler';
 import { RegisterHandler } from '../handler/register.handler';
@@ -25,7 +25,7 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
-  async requestOtp(dto: OtpRequest) {
+  async requestOtp(dto: OtpRequest): Promise<OtpEntity> {
     const user = await this.usersService.findByPhone(dto.phone);
 
     if (dto.type === 'REGISTER' && user) {
@@ -66,7 +66,7 @@ export class AuthService {
     throw new BadRequestException('password or otp is required');
   }
 
-  async changePassword(dto: ChangePasswordRequest) {
+  async changePassword(dto: ChangePasswordRequest): Promise<MessageEntity> {
     await this.otpService.verifyAndConsume(dto.phone, 'CHANGE_PASSWORD', dto.otp);
 
     const user = await this.usersService.findByPhoneWithPassword(dto.phone);

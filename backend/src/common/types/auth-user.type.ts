@@ -1,4 +1,4 @@
-import { UserStatus } from '@prisma/client';
+import { UserStatus } from '../../modules/users/entity/user.entity';
 
 export type AuthUser = {
   id: number;

@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { AuthUser } from '../../../common/types/auth-user.type';
-import { UserRepository } from '../entity/user.repository';
-import { toUserResponse } from '../entity/user.entity';
+import { CreateStudentUserData, UserRepository } from '../entity/user.repository';
+import { DeleteUserEntity, SanitizedUser, toUserResponse, UpdateUserData, UserWithPasswordEntity } from '../entity/user.entity';
 import { CreateUserHandler } from '../handler/create-user.handler';
 import { UpdateUserHandler } from '../handler/update-user.handler';
+
+type CreateStudentUserInput = Omit<CreateStudentUserData, 'studentRoleId'>;
 
 @Injectable()
 export class UsersService {
@@ -14,22 +15,17 @@ export class UsersService {
     private readonly updateUserHandler: UpdateUserHandler,
   ) {}
 
-  async createStudentUser(data: {
-    fullName: string;
-    email?: string;
-    phone: string;
-    passwordHash: string;
-  }) {
+  async createStudentUser(data: CreateStudentUserInput): Promise<SanitizedUser> {
     const user = await this.createUserHandler.createStudent(data);
     return toUserResponse(user);
   }
 
-  async findAll() {
+  async findAll(): Promise<SanitizedUser[]> {
     const users = await this.userRepository.findAll();
     return users.map(toUserResponse);
   }
 
-  async findOne(uuid: string) {
+  async findOne(uuid: string): Promise<SanitizedUser> {
     const user = await this.userRepository.findByUuid(uuid);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -42,30 +38,30 @@ export class UsersService {
     return this.findOne(uuid);
   }
 
-  async findByEmailWithPassword(email: string) {
+  async findByEmailWithPassword(email: string): Promise<UserWithPasswordEntity | null> {
     return this.userRepository.findByEmail(email);
   }
 
-  async findByPhoneWithPassword(phone: string) {
+  async findByPhoneWithPassword(phone: string): Promise<UserWithPasswordEntity | null> {
     return this.userRepository.findByPhone(phone);
   }
 
-  async findByPhone(phone: string) {
+  async findByPhone(phone: string): Promise<SanitizedUser | null> {
     const user = await this.userRepository.findByPhone(phone);
     return user ? toUserResponse(user) : null;
   }
 
-  async updatePassword(id: number, passwordHash: string) {
+  async updatePassword(id: number, passwordHash: string): Promise<SanitizedUser> {
     const user = await this.userRepository.updatePassword(id, passwordHash);
     return toUserResponse(user);
   }
 
-  async update(uuid: string, data: Prisma.UserUpdateInput) {
+  async update(uuid: string, data: UpdateUserData): Promise<SanitizedUser> {
     const user = await this.updateUserHandler.update(uuid, data);
     return toUserResponse(user);
   }
 
-  async remove(uuid: string) {
+  async remove(uuid: string): Promise<DeleteUserEntity> {
     const user = await this.userRepository.findByUuid(uuid);
     if (!user) {
       throw new NotFoundException('User not found');

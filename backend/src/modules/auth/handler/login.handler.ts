@@ -1,15 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { LoginRequest } from '../../../gateway/http/request/auth/login.request';
-import { toUserResponse } from '../../users/entity/user.entity';
+import { SanitizedUser, toUserResponse, UserStatus } from '../../users/entity/user.entity';
 import { UsersService } from '../../users/service/users.service';
 
 @Injectable()
 export class LoginHandler {
   constructor(private readonly usersService: UsersService) {}
 
-  async login(dto: LoginRequest & { password: string }) {
+  async login(dto: LoginRequest & { password: string }): Promise<SanitizedUser> {
     const user = await this.usersService.findByPhoneWithPassword(dto.phone);
 
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
@@ -23,7 +22,7 @@ export class LoginHandler {
     return toUserResponse(user);
   }
 
-  async loginWithVerifiedPhone(phone: string) {
+  async loginWithVerifiedPhone(phone: string): Promise<SanitizedUser> {
     const user = await this.usersService.findByPhoneWithPassword(phone);
 
     if (!user) {

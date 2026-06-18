@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserStatus } from '@prisma/client';
+import { UserStatus } from '../../../modules/users/entity/user.entity';
 import { EnrollmentResponse } from './enrollment.response';
 import { WalletResponse } from './wallet.response';
 

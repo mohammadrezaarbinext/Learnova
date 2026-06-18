@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository } from '../entity/auth.repository';
-import { OtpType } from '../entity/auth.entity';
+import { OtpEntity, OtpType } from '../entity/auth.entity';
 
 const OTP_TTL_SECONDS = 2 * 60;
 
@@ -10,7 +10,7 @@ export class OtpService {
 
   constructor(private readonly authRepository: AuthRepository) {}
 
-  async generate(phone: string, type: OtpType) {
+  async generate(phone: string, type: OtpType): Promise<OtpEntity> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     await this.authRepository.saveOtp(phone, type, otp, OTP_TTL_SECONDS);
     this.logger.log(`LearnNova OTP [${type}] for ${phone}: ${otp}`);
@@ -21,7 +21,7 @@ export class OtpService {
     };
   }
 
-  async verifyAndConsume(phone: string, type: OtpType, otp: string) {
+  async verifyAndConsume(phone: string, type: OtpType, otp: string): Promise<void> {
     const storedOtp = await this.authRepository.getOtp(phone, type);
     if (!storedOtp || storedOtp.otp !== otp) {
       throw new UnauthorizedException('Invalid or expired OTP');

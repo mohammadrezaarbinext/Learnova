@@ -1,17 +1,16 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { CourseStatus } from '@prisma/client';
 import { AuthUser } from '../../../common/types/auth-user.type';
 import { CreateCourseRequest } from '../../../gateway/http/request/courses/create-course.request';
 import { ListCoursesRequest } from '../../../gateway/http/request/courses/list-courses.request';
 import { UpdateCourseRequest } from '../../../gateway/http/request/courses/update-course.request';
-import { canManageCourse, CourseEntity, CourseListEntity } from '../entity/course.entity';
+import { canManageCourse, CourseEntity, CourseListEntity, CourseStatus, DeleteCourseEntity } from '../entity/course.entity';
 import { CourseRepository } from '../entity/course.repository';
 
 @Injectable()
 export class CoursesService {
   constructor(private readonly courseRepository: CourseRepository) {}
 
-  async findAll(query: ListCoursesRequest) {
+  async findAll(query: ListCoursesRequest): Promise<CourseEntity[]> {
     const teacherId = query.teacherId
       ? (await this.courseRepository.findTeacherByUuid(query.teacherId))?.id
       : undefined;
@@ -30,12 +29,12 @@ export class CoursesService {
     return courses.map((course) => this.serializeCourse(course));
   }
 
-  async findOne(uuid: string, user?: AuthUser) {
+  async findOne(uuid: string): Promise<CourseEntity> {
     const course = await this.getCourseOrThrow(uuid);
     return this.serializeCourse(course);
   }
 
-  async create(dto: CreateCourseRequest, user: AuthUser) {
+  async create(dto: CreateCourseRequest, user: AuthUser): Promise<CourseEntity> {
     if (!user.roles.includes('ADMIN') && !user.roles.includes('TEACHER')) {
       throw new ForbiddenException('Only TEACHER or ADMIN can create courses');
     }
@@ -57,13 +56,13 @@ export class CoursesService {
       price: dto.price ?? '0',
       level: dto.level,
       status: dto.status ?? CourseStatus.DRAFT,
-      teacher: { connect: { id: teacherId } },
+      teacherId,
     });
 
     return this.serializeCourse(course);
   }
 
-  async update(uuid: string, dto: UpdateCourseRequest, user: AuthUser) {
+  async update(uuid: string, dto: UpdateCourseRequest, user: AuthUser): Promise<CourseEntity> {
     const course = await this.getCourseOrThrow(uuid);
     this.ensureCanManage(course.teacherId, user);
 
@@ -79,7 +78,7 @@ export class CoursesService {
     return this.serializeCourse(updatedCourse);
   }
 
-  async remove(uuid: string, user: AuthUser) {
+  async remove(uuid: string, user: AuthUser): Promise<DeleteCourseEntity> {
     const course = await this.getCourseOrThrow(uuid);
     this.ensureCanManage(course.teacherId, user);
     await this.courseRepository.delete(uuid);
@@ -87,12 +86,12 @@ export class CoursesService {
     return { id: course.id, uuid: course.uuid, deleted: true };
   }
 
-  async findTeaching(user: AuthUser) {
+  async findTeaching(user: AuthUser): Promise<CourseEntity[]> {
     const courses = await this.courseRepository.findOwnedByTeacher(user.id);
     return courses.map((course) => this.serializeCourse(course));
   }
 
-  private async getCourseOrThrow(uuid: string) {
+  private async getCourseOrThrow(uuid: string): Promise<CourseEntity> {
     const course = await this.courseRepository.findByUuid(uuid);
     if (!course) {
       throw new NotFoundException('Course not found');
@@ -101,13 +100,13 @@ export class CoursesService {
     return course;
   }
 
-  private ensureCanManage(teacherId: number, user: AuthUser) {
+  private ensureCanManage(teacherId: number, user: AuthUser): void {
     if (!canManageCourse(user, teacherId)) {
       throw new ForbiddenException('You can manage only your own courses');
     }
   }
 
-  private serializeCourse(course: CourseEntity | CourseListEntity) {
+  private serializeCourse(course: CourseEntity | CourseListEntity): CourseEntity {
     return {
       id: course.id,
       uuid: course.uuid,

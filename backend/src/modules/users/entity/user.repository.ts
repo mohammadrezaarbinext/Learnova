@@ -1,47 +1,50 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, RoleName, UserStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infra/prisma/prisma.service';
-import { userWithAuthRelations } from './user.entity';
+import { RoleEntity, RoleName, toRoleEntity } from '../../roles/entity/role.entity';
+import { toUserResponse, UpdateUserData, UserEntity, UserStatus, UserWithPasswordEntity } from './user.entity';
+
+export type CreateStudentUserData = {
+  fullName: string;
+  email?: string;
+  phone: string;
+  passwordHash: string;
+  studentRoleId: number;
+};
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(): Promise<UserEntity[]> {
     return this.prisma.user.findMany({
       include: userWithAuthRelations,
       orderBy: { createdAt: 'desc' },
-    });
+    }).then((users) => users.map(toUserResponse));
   }
 
-  findByUuid(uuid: string) {
+  findByUuid(uuid: string): Promise<UserEntity | null> {
     return this.prisma.user.findUnique({
       where: { uuid },
       include: userWithAuthRelations,
-    });
+    }).then((user) => (user ? toUserResponse(user) : null));
   }
 
-  findByEmail(email: string) {
+  findByEmail(email: string): Promise<UserWithPasswordEntity | null> {
     return this.prisma.user.findUnique({
       where: { email },
       include: userWithAuthRelations,
-    });
+    }).then((user) => (user ? { ...toUserResponse(user), passwordHash: user.passwordHash } : null));
   }
 
-  findByPhone(phone: string) {
+  findByPhone(phone: string): Promise<UserWithPasswordEntity | null> {
     return this.prisma.user.findUnique({
       where: { phone },
       include: userWithAuthRelations,
-    });
+    }).then((user) => (user ? { ...toUserResponse(user), passwordHash: user.passwordHash } : null));
   }
 
-  createStudentUser(data: {
-    fullName: string;
-    email?: string;
-    phone: string;
-    passwordHash: string;
-    studentRoleId: number;
-  }) {
+  createStudentUser(data: CreateStudentUserData): Promise<UserEntity> {
     return this.prisma.user.create({
       data: {
         fullName: data.fullName,
@@ -59,30 +62,67 @@ export class UserRepository {
         },
       },
       include: userWithAuthRelations,
-    });
+    }).then(toUserResponse);
   }
 
-  updateByUuid(uuid: string, data: Prisma.UserUpdateInput) {
+  updateByUuid(uuid: string, data: UpdateUserData): Promise<UserEntity> {
     return this.prisma.user.update({
       where: { uuid },
       data,
       include: userWithAuthRelations,
-    });
+    }).then(toUserResponse);
   }
 
-  updatePassword(id: number, passwordHash: string) {
+  updatePassword(id: number, passwordHash: string): Promise<UserEntity> {
     return this.prisma.user.update({
       where: { id },
       data: { passwordHash },
       include: userWithAuthRelations,
-    });
+    }).then(toUserResponse);
   }
 
-  deleteByUuid(uuid: string) {
-    return this.prisma.user.delete({ where: { uuid } });
+  async deleteByUuid(uuid: string): Promise<void> {
+    await this.prisma.user.delete({ where: { uuid } });
   }
 
-  findRoleByName(name: RoleName) {
-    return this.prisma.role.findUnique({ where: { name } });
+  findRoleByName(name: RoleName): Promise<RoleEntity | null> {
+    return this.prisma.role.findUnique({ where: { name } }).then((role) => (role ? toRoleEntity(role) : null));
   }
 }
+
+const userWithAuthRelations = {
+  wallet: true,
+  enrollments: {
+    include: {
+      course: {
+        select: {
+          id: true,
+          uuid: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          price: true,
+          level: true,
+          status: true,
+          teacherId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  },
+  userRoles: {
+    include: {
+      role: {
+        include: {
+          rolePermissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.UserInclude;

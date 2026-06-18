@@ -1,13 +1,13 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuthUser } from '../../../common/types/auth-user.type';
-import { serializeEnrollment } from '../entity/enrollment.entity';
-import { EnrollmentRepository } from '../entity/enrollment.repository';
+import { DeleteEnrollmentEntity, EnrollmentEntity, serializeEnrollment } from '../entity/enrollment.entity';
+import { EnrollmentCourseLookup, EnrollmentRepository } from '../entity/enrollment.repository';
 
 @Injectable()
 export class EnrollmentsService {
   constructor(private readonly enrollmentRepository: EnrollmentRepository) {}
 
-  async enroll(courseUuid: string, user: AuthUser) {
+  async enroll(courseUuid: string, user: AuthUser): Promise<EnrollmentEntity> {
     const course = await this.getCourseOrThrow(courseUuid);
     const existingEnrollment = await this.enrollmentRepository.findByStudentAndCourse(user.id, course.id);
     if (existingEnrollment) {
@@ -19,12 +19,12 @@ export class EnrollmentsService {
     return serializeEnrollment(enrollment);
   }
 
-  async findMine(user: AuthUser) {
+  async findMine(user: AuthUser): Promise<EnrollmentEntity[]> {
     const enrollments = await this.enrollmentRepository.findMine(user.id);
     return enrollments.map(serializeEnrollment);
   }
 
-  async findByCourse(courseUuid: string, user: AuthUser) {
+  async findByCourse(courseUuid: string, user: AuthUser): Promise<EnrollmentEntity[]> {
     const course = await this.getCourseOrThrow(courseUuid);
     if (!user.roles.includes('ADMIN') && !user.roles.includes('SUPPORT') && course.teacherId !== user.id) {
       throw new ForbiddenException('You can view enrollments only for your own courses');
@@ -34,7 +34,7 @@ export class EnrollmentsService {
     return enrollments.map(serializeEnrollment);
   }
 
-  async remove(uuid: string, user: AuthUser) {
+  async remove(uuid: string, user: AuthUser): Promise<DeleteEnrollmentEntity> {
     if (!user.roles.includes('ADMIN')) {
       throw new ForbiddenException('Only ADMIN can delete enrollments');
     }
@@ -48,7 +48,7 @@ export class EnrollmentsService {
     return { id: enrollment.id, uuid: enrollment.uuid, deleted: true };
   }
 
-  private async getCourseOrThrow(uuid: string) {
+  private async getCourseOrThrow(uuid: string): Promise<EnrollmentCourseLookup> {
     const course = await this.enrollmentRepository.findCourseByUuid(uuid);
     if (!course) {
       throw new NotFoundException('Course not found');
