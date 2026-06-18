@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -32,6 +33,22 @@ enum CourseStatus {
   ARCHIVED
 }
 
+enum PaymentRequestStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELED
+}
+
+enum PaymentTransactionStatus {
+  SUCCESS
+  FAILED
+}
+
+enum PaymentProvider {
+  MOCK
+}
+
 model User {
   id           Int        @id @default(autoincrement())
   uuid         String     @unique @default(uuid()) @db.Uuid
@@ -43,10 +60,12 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  wallet      Wallet?
-  userRoles   UserRole[]
-  courses     Course[]     @relation("CourseTeacher")
-  enrollments Enrollment[] @relation("EnrollmentStudent")
+  wallet              Wallet?
+  userRoles           UserRole[]
+  courses             Course[]             @relation("CourseTeacher")
+  enrollments         Enrollment[]         @relation("EnrollmentStudent")
+  paymentRequests     PaymentRequest[]
+  paymentTransactions PaymentTransaction[]
 }
 
 model Wallet {
@@ -123,9 +142,11 @@ model Course {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  teacher     User         @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
-  videos      Video[]
-  enrollments Enrollment[]
+  teacher             User                 @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  videos              Video[]
+  enrollments         Enrollment[]
+  paymentRequests     PaymentRequest[]
+  paymentTransactions PaymentTransaction[]
 }
 
 model Video {
@@ -156,4 +177,54 @@ model Enrollment {
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
+}
+
+model PaymentRequest {
+  id          Int                  @id @default(autoincrement())
+  uuid        String               @unique @default(uuid()) @db.Uuid
+  userId      Int
+  courseId    Int
+  amount      Decimal              @db.Decimal(18, 2)
+  currency    String               @default("IRT")
+  status      PaymentRequestStatus @default(PENDING)
+  provider    PaymentProvider      @default(MOCK)
+  description String?
+  metadata    Json?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course       Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  transactions PaymentTransaction[]
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+}
+
+model PaymentTransaction {
+  id                  Int                      @id @default(autoincrement())
+  uuid                String                   @unique @default(uuid()) @db.Uuid
+  paymentRequestId    Int
+  userId              Int
+  courseId            Int
+  amount              Decimal                  @db.Decimal(18, 2)
+  currency            String                   @default("IRT")
+  status              PaymentTransactionStatus
+  provider            PaymentProvider          @default(MOCK)
+  providerAuthority   String?
+  providerReferenceId String?
+  rawRequest          Json?
+  rawResponse         Json?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  paymentRequest PaymentRequest @relation(fields: [paymentRequestId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([paymentRequestId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
 }

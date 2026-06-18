@@ -40,13 +40,14 @@ Authorization: Bearer <accessToken>
 4. Store the returned `accessToken` on the client.
 5. Send `Authorization: Bearer <accessToken>` for protected requests.
 6. Use `GET /auth/me` to hydrate the current user after app refresh.
+7. For paid courses, call `POST /courses/:courseId/purchase` instead of direct enrollment. The current payment provider is mocked and returns a successful payment immediately.
 
 The backend stores JWT session metadata in Redis. If the Redis session expires or is removed, the JWT is rejected.
 
 OTP is currently mocked. The backend logs it in the terminal:
 
 ```text
-LearnNova OTP [REGISTER] for +989121234567: 123456
+LearnNova OTP generated | type=REGISTER | phone=+989121234567 | otp=123456 | expiresIn=120s
 ```
 
 ## User Shape
@@ -92,7 +93,7 @@ LearnNova OTP [REGISTER] for +989121234567: 123456
     }
   ],
   "roles": ["STUDENT"],
-  "permissions": ["student.panel.access", "auth.me"],
+  "permissions": ["student.panel.access", "auth.me", "courses.read", "videos.read", "enrollments.create", "payments.purchase", "payments.read"],
   "createdAt": "2026-06-18T08:45:00.000Z",
   "updatedAt": "2026-06-18T08:45:00.000Z"
 }
@@ -172,7 +173,7 @@ Response:
       "updatedAt": "2026-06-18T08:45:00.000Z"
     },
     "roles": ["STUDENT"],
-    "permissions": ["student.panel.access", "auth.me"],
+    "permissions": ["student.panel.access", "auth.me", "courses.read", "videos.read", "enrollments.create", "payments.purchase", "payments.read"],
     "createdAt": "2026-06-18T08:45:00.000Z",
     "updatedAt": "2026-06-18T08:45:00.000Z"
   }
@@ -231,7 +232,7 @@ Response:
       "updatedAt": "2026-06-18T08:45:00.000Z"
     },
     "roles": ["STUDENT"],
-    "permissions": ["student.panel.access", "auth.me"],
+    "permissions": ["student.panel.access", "auth.me", "courses.read", "videos.read", "enrollments.create", "payments.purchase", "payments.read"],
     "createdAt": "2026-06-18T08:45:00.000Z",
     "updatedAt": "2026-06-18T08:45:00.000Z"
   }
@@ -603,7 +604,7 @@ Required permission:
 enrollments.create
 ```
 
-Enrolls the current user. Duplicate enrollments are rejected. Paid courses enroll directly for now until payment validation is added.
+Enrolls the current user directly. Duplicate enrollments are rejected. Frontend should use this direct enrollment flow for free courses. For paid courses, use `POST /courses/:courseId/purchase` so the backend creates the payment request, payment transaction, and enrollment together.
 
 ### My Enrollments
 
@@ -640,6 +641,270 @@ enrollments.delete
 ```
 
 Admin only for now.
+
+## Payment Endpoints
+
+All payment endpoints require JWT auth. The current provider is `MOCK`: purchase requests are completed immediately, a successful transaction is created, and the user is enrolled in the course inside one backend transaction.
+
+### Purchase Course
+
+```http
+POST /courses/:courseId/purchase
+```
+
+`:courseId` is the course uuid.
+
+Required permission:
+
+```text
+payments.purchase
+```
+
+Request body: none.
+
+Response:
+
+```json
+{
+  "message": "Course purchased successfully with mock payment",
+  "alreadyEnrolled": false,
+  "payment": {
+    "id": 1,
+    "uuid": "54c0ef37-e142-4b2f-93a1-587087452dd8",
+    "userId": 1,
+    "courseId": 1,
+    "amount": "250000.00",
+    "currency": "IRT",
+    "status": "SUCCESS",
+    "provider": "MOCK",
+    "description": "Mock payment for course NestJS Foundations",
+    "metadata": {
+      "mode": "mock",
+      "courseUuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+      "courseTitle": "NestJS Foundations"
+    },
+    "course": {
+      "id": 1,
+      "uuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+      "title": "NestJS Foundations",
+      "description": "Build production-ready APIs with NestJS.",
+      "thumbnailUrl": null,
+      "price": "250000.00",
+      "level": "BEGINNER",
+      "status": "PUBLISHED",
+      "teacherId": 2,
+      "createdAt": "2026-06-18T08:45:00.000Z",
+      "updatedAt": "2026-06-18T08:45:00.000Z"
+    },
+    "transactions": [
+      {
+        "id": 1,
+        "uuid": "b91e4df2-e06f-495d-88f2-36287df9206f",
+        "paymentRequestId": 1,
+        "userId": 1,
+        "courseId": 1,
+        "amount": "250000.00",
+        "currency": "IRT",
+        "status": "SUCCESS",
+        "provider": "MOCK",
+        "providerAuthority": "MOCK-AUTH-54c0ef37-e142-4b2f-93a1-587087452dd8",
+        "providerReferenceId": "MOCK-REF-54c0ef37-e142-4b2f-93a1-587087452dd8",
+        "rawRequest": {
+          "provider": "MOCK",
+          "authority": "MOCK-AUTH-54c0ef37-e142-4b2f-93a1-587087452dd8",
+          "amount": "250000.00",
+          "currency": "IRT"
+        },
+        "rawResponse": {
+          "provider": "MOCK",
+          "referenceId": "MOCK-REF-54c0ef37-e142-4b2f-93a1-587087452dd8",
+          "status": "SUCCESS",
+          "paid": true
+        },
+        "createdAt": "2026-06-18T08:45:00.000Z",
+        "updatedAt": "2026-06-18T08:45:00.000Z"
+      }
+    ],
+    "createdAt": "2026-06-18T08:45:00.000Z",
+    "updatedAt": "2026-06-18T08:45:00.000Z"
+  },
+  "enrollment": {
+    "id": 1,
+    "uuid": "7c93df3c-c2f0-4f7f-88d4-78a6fd2a3e41",
+    "studentId": 1,
+    "courseId": 1,
+    "course": {
+      "id": 1,
+      "uuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+      "title": "NestJS Foundations",
+      "description": "Build production-ready APIs with NestJS.",
+      "thumbnailUrl": null,
+      "price": "250000.00",
+      "level": "BEGINNER",
+      "status": "PUBLISHED",
+      "teacherId": 2,
+      "createdAt": "2026-06-18T08:45:00.000Z",
+      "updatedAt": "2026-06-18T08:45:00.000Z"
+    },
+    "createdAt": "2026-06-18T08:45:00.000Z",
+    "updatedAt": "2026-06-18T08:45:00.000Z"
+  }
+}
+```
+
+If the user is already enrolled, the backend returns:
+
+```json
+{
+  "message": "User is already enrolled in this course",
+  "alreadyEnrolled": true,
+  "payment": null,
+  "enrollment": {
+    "id": 1,
+    "uuid": "7c93df3c-c2f0-4f7f-88d4-78a6fd2a3e41",
+    "studentId": 1,
+    "courseId": 1,
+    "course": {
+      "id": 1,
+      "uuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+      "title": "NestJS Foundations",
+      "description": "Build production-ready APIs with NestJS.",
+      "thumbnailUrl": null,
+      "price": "250000.00",
+      "level": "BEGINNER",
+      "status": "PUBLISHED",
+      "teacherId": 2,
+      "createdAt": "2026-06-18T08:45:00.000Z",
+      "updatedAt": "2026-06-18T08:45:00.000Z"
+    },
+    "createdAt": "2026-06-18T08:45:00.000Z",
+    "updatedAt": "2026-06-18T08:45:00.000Z"
+  }
+}
+```
+
+When the user is already enrolled and has a previous payment request for that course, `payment` contains the latest matching payment request instead of `null`.
+
+### My Payments
+
+```http
+GET /payments/me
+```
+
+Required permission:
+
+```text
+payments.read
+```
+
+Returns the current user's payment requests ordered by newest first. Each item includes the course and transactions.
+
+Response: `PaymentRequest[]`
+
+### Get Payment
+
+```http
+GET /payments/:id
+```
+
+`:id` is the payment request uuid.
+
+Required permission:
+
+```text
+payments.read
+```
+
+Users can view their own payments. `ADMIN` and `SUPPORT` can view any payment.
+
+Response: `PaymentRequest`
+
+### Payment Request Shape
+
+```json
+{
+  "id": 1,
+  "uuid": "54c0ef37-e142-4b2f-93a1-587087452dd8",
+  "userId": 1,
+  "courseId": 1,
+  "amount": "250000.00",
+  "currency": "IRT",
+  "status": "SUCCESS",
+  "provider": "MOCK",
+  "description": "Mock payment for course NestJS Foundations",
+  "metadata": {
+    "mode": "mock",
+    "courseUuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+    "courseTitle": "NestJS Foundations"
+  },
+  "course": {
+    "id": 1,
+    "uuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+    "title": "NestJS Foundations",
+    "description": "Build production-ready APIs with NestJS.",
+    "thumbnailUrl": null,
+    "price": "250000.00",
+    "level": "BEGINNER",
+    "status": "PUBLISHED",
+    "teacherId": 2,
+    "createdAt": "2026-06-18T08:45:00.000Z",
+    "updatedAt": "2026-06-18T08:45:00.000Z"
+  },
+  "transactions": [
+    {
+      "id": 1,
+      "uuid": "b91e4df2-e06f-495d-88f2-36287df9206f",
+      "paymentRequestId": 1,
+      "userId": 1,
+      "courseId": 1,
+      "amount": "250000.00",
+      "currency": "IRT",
+      "status": "SUCCESS",
+      "provider": "MOCK",
+      "providerAuthority": "MOCK-AUTH-54c0ef37-e142-4b2f-93a1-587087452dd8",
+      "providerReferenceId": "MOCK-REF-54c0ef37-e142-4b2f-93a1-587087452dd8",
+      "rawRequest": {
+        "provider": "MOCK",
+        "authority": "MOCK-AUTH-54c0ef37-e142-4b2f-93a1-587087452dd8",
+        "amount": "250000.00",
+        "currency": "IRT"
+      },
+      "rawResponse": {
+        "provider": "MOCK",
+        "referenceId": "MOCK-REF-54c0ef37-e142-4b2f-93a1-587087452dd8",
+        "status": "SUCCESS",
+        "paid": true
+      },
+      "createdAt": "2026-06-18T08:45:00.000Z",
+      "updatedAt": "2026-06-18T08:45:00.000Z"
+    }
+  ],
+  "createdAt": "2026-06-18T08:45:00.000Z",
+  "updatedAt": "2026-06-18T08:45:00.000Z"
+}
+```
+
+Allowed payment request `status` values:
+
+```text
+PENDING
+SUCCESS
+FAILED
+CANCELED
+```
+
+Allowed payment transaction `status` values:
+
+```text
+SUCCESS
+FAILED
+```
+
+Allowed `provider` values:
+
+```text
+MOCK
+```
 
 ## Common Errors
 
@@ -722,6 +987,9 @@ videos.delete
 enrollments.read
 enrollments.create
 enrollments.delete
+payments.read
+payments.purchase
+payments.manage
 ```
 
 Default `STUDENT` permissions:
@@ -732,6 +1000,8 @@ auth.me
 courses.read
 videos.read
 enrollments.create
+payments.purchase
+payments.read
 ```
 
 ## Local Startup

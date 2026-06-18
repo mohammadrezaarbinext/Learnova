@@ -13,7 +13,7 @@ export class OtpService {
   async generate(phone: string, type: OtpType): Promise<OtpEntity> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     await this.authRepository.saveOtp(phone, type, otp, OTP_TTL_SECONDS);
-    this.logger.log(`LearnNova OTP [${type}] for ${phone}: ${otp}`);
+    this.logger.warn(`LearnNova OTP generated | type=${type} | phone=${phone} | otp=${otp} | expiresIn=${OTP_TTL_SECONDS}s`);
 
     return {
       ok: true,

@@ -8,6 +8,7 @@ import { RedisModule } from './infra/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
@@ -31,6 +32,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     CoursesModule,
     VideosModule,
     EnrollmentsModule,
+    PaymentsModule,
     HttpModule,
   ],
 })

@@ -36,6 +36,9 @@ const permissions = [
   'enrollments.read',
   'enrollments.create',
   'enrollments.delete',
+  'payments.read',
+  'payments.purchase',
+  'payments.manage',
 ];
 
 const rolePermissions: Record<RoleName, string[]> = {
@@ -52,9 +55,18 @@ const rolePermissions: Record<RoleName, string[]> = {
     'videos.update',
     'videos.delete',
     'enrollments.read',
+    'payments.read',
   ],
-  [RoleName.STUDENT]: ['student.panel.access', 'auth.me', 'courses.read', 'videos.read', 'enrollments.create'],
-  [RoleName.SUPPORT]: ['support.panel.access', 'users.read', 'wallets.read', 'courses.read', 'enrollments.read'],
+  [RoleName.STUDENT]: [
+    'student.panel.access',
+    'auth.me',
+    'courses.read',
+    'videos.read',
+    'enrollments.create',
+    'payments.purchase',
+    'payments.read',
+  ],
+  [RoleName.SUPPORT]: ['support.panel.access', 'users.read', 'wallets.read', 'courses.read', 'enrollments.read', 'payments.read'],
 };
 
 async function main() {
