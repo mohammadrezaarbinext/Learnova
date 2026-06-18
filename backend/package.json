@@ -12,7 +12,9 @@
     "prisma:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:prepare": "npm run prisma:generate && npm run db:push && npm run db:seed",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:seed:test-data": "tsx prisma/seed-api-test-data.ts",
+    "test:api:smoke": "tsx scripts/api-smoke-test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

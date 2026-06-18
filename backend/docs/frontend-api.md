@@ -1020,3 +1020,20 @@ prisma generate -> prisma db push -> prisma db seed -> nest start --watch
 ```
 
 PostgreSQL database must exist before startup. Prisma creates and updates the tables.
+
+## Local API Test Data
+
+To seed ready-to-test local users, courses, videos, enrollments, and mock payments:
+
+```bash
+cd backend
+npm run db:seed:test-data
+```
+
+To run the local smoke test against a running backend:
+
+```bash
+npm run test:api:smoke
+```
+
+See `backend/docs/api-test-data.md` for demo account credentials, fixed UUIDs, and quick curl checks.
