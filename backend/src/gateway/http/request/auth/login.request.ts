@@ -1,13 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class LoginRequest {
-  @ApiProperty({ example: 'student@learnnova.com' })
-  @IsEmail()
-  email: string;
+  @ApiProperty({ example: '+989121234567' })
+  @IsString()
+  phone: string;
 
-  @ApiProperty({ minLength: 8, example: 'StrongPass123' })
+  @ApiPropertyOptional({ minLength: 8, example: 'StrongPass123' })
+  @IsOptional()
   @IsString()
   @MinLength(8)
-  password: string;
+  password?: string;
+
+  @ApiPropertyOptional({ example: '123456' })
+  @IsOptional()
+  @IsString()
+  otp?: string;
 }

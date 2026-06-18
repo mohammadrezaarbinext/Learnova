@@ -3,17 +3,20 @@ import { UserStatus } from '@prisma/client';
 import { WalletResponse } from './wallet.response';
 
 export class UserResponse {
+  @ApiProperty({ example: 1, description: 'Internal numeric database id.' })
+  id: number;
+
   @ApiProperty({ example: 'df030de8-6479-4837-a03d-65836fa80d60', format: 'uuid' })
-  id: string;
+  uuid: string;
 
   @ApiProperty({ example: 'Sara Ahmadi' })
   fullName: string;
 
-  @ApiProperty({ example: 'sara@learnnova.com' })
-  email: string;
+  @ApiPropertyOptional({ example: 'sara@learnnova.com', nullable: true })
+  email: string | null;
 
-  @ApiPropertyOptional({ example: '+989121234567', nullable: true })
-  phone: string | null;
+  @ApiProperty({ example: '+989121234567' })
+  phone: string;
 
   @ApiProperty({ enum: UserStatus, example: UserStatus.ACTIVE })
   status: UserStatus;
@@ -35,8 +38,11 @@ export class UserResponse {
 }
 
 export class DeleteUserResponse {
+  @ApiProperty({ example: 1, description: 'Internal numeric database id.' })
+  id: number;
+
   @ApiProperty({ example: 'df030de8-6479-4837-a03d-65836fa80d60', format: 'uuid' })
-  id: string;
+  uuid: string;
 
   @ApiProperty({ example: true })
   deleted: boolean;

@@ -21,11 +21,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const session = await this.redisService.getJson<{ userId: string }>(`auth:session:${payload.jti}`);
-    if (!session || session.userId !== payload.sub) {
+    const session = await this.redisService.getJson<{ userUuid: string }>(`auth:session:${payload.jti}`);
+    if (!session || session.userUuid !== payload.sub) {
       throw new UnauthorizedException('Session is no longer active');
     }
 
-    return this.usersService.findAuthUserById(payload.sub);
+    return this.usersService.findAuthUserByUuid(payload.sub);
   }
 }

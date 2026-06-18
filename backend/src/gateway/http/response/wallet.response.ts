@@ -1,11 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class WalletResponse {
-  @ApiProperty({ example: '3d6f3206-6277-449c-a782-e58ac3ddc5a1', format: 'uuid' })
-  id: string;
+  @ApiProperty({ example: 1, description: 'Internal numeric database id.' })
+  id: number;
 
-  @ApiProperty({ example: 'df030de8-6479-4837-a03d-65836fa80d60', format: 'uuid' })
-  userId: string;
+  @ApiProperty({ example: '3d6f3206-6277-449c-a782-e58ac3ddc5a1', format: 'uuid' })
+  uuid: string;
+
+  @ApiProperty({ example: 1, description: 'Internal numeric user id.' })
+  userId: number;
 
   @ApiProperty({ example: '0.00', description: 'Wallet balance as a decimal string.' })
   balance: string;

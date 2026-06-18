@@ -4,10 +4,26 @@ import { UserResponse } from './user.response';
 export class AuthResponse {
   @ApiProperty({
     example:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZjAzMGRlOC02NDc5LTQ4MzctYTAzZC02NTgzNmZhODBkNjAiLCJlbWFpbCI6InNhcmFAbGVhcm5vdmEuY29tIiwianRpIjoiYjVmYjI5NTEtZmM3My00NDlmLWEzYTUtMmI1MGU1YzIzZTQxIn0.signature',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZjAzMGRlOC02NDc5LTQ4MzctYTAzZC02NTgzNmZhODBkNjAiLCJwaG9uZSI6Iis5ODkxMjEyMzQ1NjciLCJqdGkiOiJiNWZiMjk1MS1mYzczLTQ0OWYtYTNhNS0yYjUwZTVjMjNlNDEifQ.signature',
   })
   accessToken: string;
 
   @ApiProperty({ type: UserResponse })
   user: UserResponse;
+}
+
+export class OtpResponse {
+  @ApiProperty({ example: true })
+  ok: boolean;
+
+  @ApiProperty({ example: 'OTP generated and logged by backend.' })
+  message: string;
+}
+
+export class MessageResponse {
+  @ApiProperty({ example: true })
+  ok: boolean;
+
+  @ApiProperty({ example: 'Password changed successfully.' })
+  message: string;
 }

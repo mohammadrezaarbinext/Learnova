@@ -21,10 +21,11 @@ enum RoleName {
 }
 
 model User {
-  id           String     @id @default(uuid()) @db.Uuid
+  id           Int        @id @default(autoincrement())
+  uuid         String     @unique @default(uuid()) @db.Uuid
   fullName     String
-  email        String     @unique
-  phone        String?
+  email        String?    @unique
+  phone        String     @unique
   passwordHash String
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime   @default(now())
@@ -35,8 +36,9 @@ model User {
 }
 
 model Wallet {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  userId    Int      @unique
   balance   Decimal  @default(0) @db.Decimal(18, 2)
   currency  String   @default("IRT")
   createdAt DateTime @default(now())
@@ -46,7 +48,8 @@ model Wallet {
 }
 
 model Role {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid()) @db.Uuid
   name        RoleName @unique
   description String?
   createdAt   DateTime @default(now())
@@ -57,7 +60,8 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid()) @db.Uuid
   name        String   @unique
   description String?
   createdAt   DateTime @default(now())
@@ -67,9 +71,10 @@ model Permission {
 }
 
 model UserRole {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  roleId    String   @db.Uuid
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  userId    Int
+  roleId    Int
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -79,9 +84,10 @@ model UserRole {
 }
 
 model RolePermission {
-  id           String   @id @default(uuid()) @db.Uuid
-  roleId       String   @db.Uuid
-  permissionId String   @db.Uuid
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(uuid()) @db.Uuid
+  roleId       Int
+  permissionId Int
   createdAt    DateTime @default(now())
 
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)

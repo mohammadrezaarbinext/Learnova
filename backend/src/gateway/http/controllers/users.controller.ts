@@ -35,42 +35,42 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a user by id' })
-  @ApiParam({ name: 'id', format: 'uuid', example: 'df030de8-6479-4837-a03d-65836fa80d60' })
+  @Get(':uuid')
+  @ApiOperation({ summary: 'Get a user by uuid' })
+  @ApiParam({ name: 'uuid', format: 'uuid', example: 'df030de8-6479-4837-a03d-65836fa80d60' })
   @ApiOkResponse({ description: 'User details with roles, permissions, and wallet.', type: UserResponse })
-  @ApiBadRequestResponse({ description: 'id must be a UUID.', type: ErrorResponse })
+  @ApiBadRequestResponse({ description: 'uuid must be a UUID.', type: ErrorResponse })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT.', type: ErrorResponse })
   @ApiForbiddenResponse({ description: 'Requires users.read permission.', type: ErrorResponse })
   @ApiNotFoundResponse({ description: 'User not found.', type: ErrorResponse })
   @Permissions('users.read')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.findOne(id);
+  findOne(@Param('uuid', ParseUUIDPipe) uuid: string) {
+    return this.usersService.findOne(uuid);
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @ApiOperation({ summary: 'Update a user' })
-  @ApiParam({ name: 'id', format: 'uuid', example: 'df030de8-6479-4837-a03d-65836fa80d60' })
+  @ApiParam({ name: 'uuid', format: 'uuid', example: 'df030de8-6479-4837-a03d-65836fa80d60' })
   @ApiOkResponse({ description: 'Updated user.', type: UserResponse })
-  @ApiBadRequestResponse({ description: 'Invalid id or request body.', type: ErrorResponse })
+  @ApiBadRequestResponse({ description: 'Invalid uuid or request body.', type: ErrorResponse })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT.', type: ErrorResponse })
   @ApiForbiddenResponse({ description: 'Requires users.update permission.', type: ErrorResponse })
   @ApiNotFoundResponse({ description: 'User not found.', type: ErrorResponse })
   @Permissions('users.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserRequest) {
-    return this.usersService.update(id, dto);
+  update(@Param('uuid', ParseUUIDPipe) uuid: string, @Body() dto: UpdateUserRequest) {
+    return this.usersService.update(uuid, dto);
   }
 
-  @Delete(':id')
+  @Delete(':uuid')
   @ApiOperation({ summary: 'Delete a user' })
-  @ApiParam({ name: 'id', format: 'uuid', example: 'df030de8-6479-4837-a03d-65836fa80d60' })
+  @ApiParam({ name: 'uuid', format: 'uuid', example: 'df030de8-6479-4837-a03d-65836fa80d60' })
   @ApiOkResponse({ description: 'Delete confirmation.', type: DeleteUserResponse })
-  @ApiBadRequestResponse({ description: 'id must be a UUID.', type: ErrorResponse })
+  @ApiBadRequestResponse({ description: 'uuid must be a UUID.', type: ErrorResponse })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT.', type: ErrorResponse })
   @ApiForbiddenResponse({ description: 'Requires users.delete permission.', type: ErrorResponse })
   @ApiNotFoundResponse({ description: 'User not found.', type: ErrorResponse })
   @Permissions('users.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.remove(id);
+  remove(@Param('uuid', ParseUUIDPipe) uuid: string) {
+    return this.usersService.remove(uuid);
   }
 }

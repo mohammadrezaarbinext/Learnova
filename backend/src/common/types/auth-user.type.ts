@@ -1,10 +1,11 @@
 import { UserStatus } from '@prisma/client';
 
 export type AuthUser = {
-  id: string;
-  email: string;
+  id: number;
+  uuid: string;
+  phone: string;
+  email: string | null;
   fullName: string;
-  phone: string | null;
   status: UserStatus;
   roles: string[];
   permissions: string[];

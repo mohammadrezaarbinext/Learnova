@@ -5,7 +5,7 @@ import { WalletRepository } from '../entity/wallet.repository';
 export class WalletsService {
   constructor(private readonly walletRepository: WalletRepository) {}
 
-  async findByUserId(userId: string) {
+  async findByUserId(userId: number) {
     const wallet = await this.walletRepository.findByUserId(userId);
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
@@ -14,8 +14,17 @@ export class WalletsService {
     return wallet;
   }
 
-  async updateBalance(userId: string, balance: string) {
-    await this.findByUserId(userId);
-    return this.walletRepository.updateBalance(userId, balance);
+  async findByUserUuid(userUuid: string) {
+    const wallet = await this.walletRepository.findByUserUuid(userUuid);
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    return wallet;
+  }
+
+  async updateBalanceByUserUuid(userUuid: string, balance: string) {
+    const wallet = await this.findByUserUuid(userUuid);
+    return this.walletRepository.updateBalanceByWalletId(wallet.id, balance);
   }
 }

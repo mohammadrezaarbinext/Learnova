@@ -16,8 +16,8 @@ export class UsersService {
 
   async createStudentUser(data: {
     fullName: string;
-    email: string;
-    phone?: string;
+    email?: string;
+    phone: string;
     passwordHash: string;
   }) {
     const user = await this.createUserHandler.createStudent(data);
@@ -29,8 +29,8 @@ export class UsersService {
     return users.map(toUserResponse);
   }
 
-  async findOne(id: string) {
-    const user = await this.userRepository.findById(id);
+  async findOne(uuid: string) {
+    const user = await this.userRepository.findByUuid(uuid);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -38,26 +38,40 @@ export class UsersService {
     return toUserResponse(user);
   }
 
-  async findAuthUserById(id: string): Promise<AuthUser> {
-    return this.findOne(id);
+  async findAuthUserByUuid(uuid: string): Promise<AuthUser> {
+    return this.findOne(uuid);
   }
 
   async findByEmailWithPassword(email: string) {
     return this.userRepository.findByEmail(email);
   }
 
-  async update(id: string, data: Prisma.UserUpdateInput) {
-    const user = await this.updateUserHandler.update(id, data);
+  async findByPhoneWithPassword(phone: string) {
+    return this.userRepository.findByPhone(phone);
+  }
+
+  async findByPhone(phone: string) {
+    const user = await this.userRepository.findByPhone(phone);
+    return user ? toUserResponse(user) : null;
+  }
+
+  async updatePassword(id: number, passwordHash: string) {
+    const user = await this.userRepository.updatePassword(id, passwordHash);
     return toUserResponse(user);
   }
 
-  async remove(id: string) {
-    const user = await this.userRepository.findById(id);
+  async update(uuid: string, data: Prisma.UserUpdateInput) {
+    const user = await this.updateUserHandler.update(uuid, data);
+    return toUserResponse(user);
+  }
+
+  async remove(uuid: string) {
+    const user = await this.userRepository.findByUuid(uuid);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    await this.userRepository.delete(id);
-    return { id, deleted: true };
+    await this.userRepository.deleteByUuid(uuid);
+    return { id: user.id, uuid: user.uuid, deleted: true };
   }
 }

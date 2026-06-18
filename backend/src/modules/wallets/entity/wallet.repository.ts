@@ -6,13 +6,21 @@ import { PrismaService } from '../../../infra/prisma/prisma.service';
 export class WalletRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findByUserId(userId: string) {
+  findByUserId(userId: number) {
     return this.prisma.wallet.findUnique({ where: { userId } });
   }
 
-  updateBalance(userId: string, balance: Prisma.Decimal | string) {
+  findByUserUuid(userUuid: string) {
+    return this.prisma.wallet.findFirst({
+      where: {
+        user: { uuid: userUuid },
+      },
+    });
+  }
+
+  updateBalanceByWalletId(id: number, balance: Prisma.Decimal | string) {
     return this.prisma.wallet.update({
-      where: { userId },
+      where: { id },
       data: { balance },
     });
   }

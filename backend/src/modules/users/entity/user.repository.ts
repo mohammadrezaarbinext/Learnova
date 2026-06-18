@@ -14,9 +14,9 @@ export class UserRepository {
     });
   }
 
-  findById(id: string) {
+  findByUuid(uuid: string) {
     return this.prisma.user.findUnique({
-      where: { id },
+      where: { uuid },
       include: userWithAuthRelations,
     });
   }
@@ -28,12 +28,19 @@ export class UserRepository {
     });
   }
 
+  findByPhone(phone: string) {
+    return this.prisma.user.findUnique({
+      where: { phone },
+      include: userWithAuthRelations,
+    });
+  }
+
   createStudentUser(data: {
     fullName: string;
-    email: string;
-    phone?: string;
+    email?: string;
+    phone: string;
     passwordHash: string;
-    studentRoleId: string;
+    studentRoleId: number;
   }) {
     return this.prisma.user.create({
       data: {
@@ -55,16 +62,24 @@ export class UserRepository {
     });
   }
 
-  update(id: string, data: Prisma.UserUpdateInput) {
+  updateByUuid(uuid: string, data: Prisma.UserUpdateInput) {
     return this.prisma.user.update({
-      where: { id },
+      where: { uuid },
       data,
       include: userWithAuthRelations,
     });
   }
 
-  delete(id: string) {
-    return this.prisma.user.delete({ where: { id } });
+  updatePassword(id: number, passwordHash: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { passwordHash },
+      include: userWithAuthRelations,
+    });
+  }
+
+  deleteByUuid(uuid: string) {
+    return this.prisma.user.delete({ where: { uuid } });
   }
 
   findRoleByName(name: RoleName) {

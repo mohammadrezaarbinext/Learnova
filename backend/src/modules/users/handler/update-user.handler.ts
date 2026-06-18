@@ -6,12 +6,12 @@ import { UserRepository } from '../entity/user.repository';
 export class UpdateUserHandler {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async update(id: string, data: Prisma.UserUpdateInput) {
-    const user = await this.userRepository.findById(id);
+  async update(uuid: string, data: Prisma.UserUpdateInput) {
+    const user = await this.userRepository.findByUuid(uuid);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return this.userRepository.update(id, data);
+    return this.userRepository.updateByUuid(uuid, data);
   }
 }

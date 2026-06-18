@@ -34,25 +34,35 @@ Authorization: Bearer <accessToken>
 
 ## Auth Flow
 
-1. Call `POST /auth/register` or `POST /auth/login`.
-2. Store the returned `accessToken` on the client.
-3. Send `Authorization: Bearer <accessToken>` for protected requests.
-4. Use `GET /auth/me` to hydrate the current user after app refresh.
+1. Call `POST /auth/otp` whenever an OTP is needed, with `type` set to `REGISTER`, `LOGIN`, or `CHANGE_PASSWORD`.
+2. Register flow: call `POST /auth/otp` with `type: "REGISTER"`, read the OTP from backend logs, then call `POST /auth/register`.
+3. Login flow: call `POST /auth/login` with phone/password, or call `POST /auth/otp` with `type: "LOGIN"` and then login with phone/OTP.
+4. Store the returned `accessToken` on the client.
+5. Send `Authorization: Bearer <accessToken>` for protected requests.
+6. Use `GET /auth/me` to hydrate the current user after app refresh.
 
 The backend stores JWT session metadata in Redis. If the Redis session expires or is removed, the JWT is rejected.
+
+OTP is currently mocked. The backend logs it in the terminal:
+
+```text
+LearnNova OTP [REGISTER] for +989121234567: 123456
+```
 
 ## User Shape
 
 ```json
 {
-  "id": "df030de8-6479-4837-a03d-65836fa80d60",
+  "id": 1,
+  "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
   "fullName": "Sara Ahmadi",
-  "email": "sara@learnnova.com",
+  "email": null,
   "phone": "+989121234567",
   "status": "ACTIVE",
   "wallet": {
-    "id": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
-    "userId": "df030de8-6479-4837-a03d-65836fa80d60",
+    "id": 1,
+    "uuid": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
+    "userId": 1,
     "balance": "0.00",
     "currency": "IRT",
     "createdAt": "2026-06-18T08:45:00.000Z",
@@ -67,6 +77,38 @@ The backend stores JWT session metadata in Redis. If the Redis session expires o
 
 ## Auth Endpoints
 
+### Request OTP
+
+```http
+POST /auth/otp
+```
+
+Request:
+
+```json
+{
+  "phone": "+989121234567",
+  "type": "REGISTER"
+}
+```
+
+Allowed `type` values:
+
+```text
+REGISTER
+LOGIN
+CHANGE_PASSWORD
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "message": "OTP generated and logged by backend."
+}
+```
+
 ### Register
 
 ```http
@@ -77,12 +119,13 @@ Request:
 
 ```json
 {
-  "fullName": "Sara Ahmadi",
-  "email": "sara@learnnova.com",
-  "password": "StrongPass123",
-  "phone": "+989121234567"
+  "phone": "+989121234567",
+  "otp": "123456",
+  "password": "StrongPass123"
 }
 ```
+
+Register only accepts phone, OTP, and password. The backend uses the phone as the initial display name.
 
 Response:
 
@@ -90,14 +133,16 @@ Response:
 {
   "accessToken": "<jwt>",
   "user": {
-    "id": "df030de8-6479-4837-a03d-65836fa80d60",
-    "fullName": "Sara Ahmadi",
-    "email": "sara@learnnova.com",
+    "id": 1,
+    "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
+    "fullName": "+989121234567",
+    "email": null,
     "phone": "+989121234567",
     "status": "ACTIVE",
     "wallet": {
-      "id": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
-      "userId": "df030de8-6479-4837-a03d-65836fa80d60",
+      "id": 1,
+      "uuid": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
+      "userId": 1,
       "balance": "0.00",
       "currency": "IRT",
       "createdAt": "2026-06-18T08:45:00.000Z",
@@ -115,8 +160,9 @@ Notes:
 - Creates a user.
 - Creates the user wallet automatically.
 - Assigns the `STUDENT` role by default.
+- If the phone already belongs to a registered account, the backend verifies OTP first and then returns conflict.
 
-### Login
+### Login With Password Or OTP
 
 ```http
 POST /auth/login
@@ -126,8 +172,17 @@ Request:
 
 ```json
 {
-  "email": "sara@learnnova.com",
+  "phone": "+989121234567",
   "password": "StrongPass123"
+}
+```
+
+Or:
+
+```json
+{
+  "phone": "+989121234567",
+  "otp": "123456"
 }
 ```
 
@@ -137,14 +192,16 @@ Response:
 {
   "accessToken": "<jwt>",
   "user": {
-    "id": "df030de8-6479-4837-a03d-65836fa80d60",
+    "id": 1,
+    "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
     "fullName": "Sara Ahmadi",
     "email": "sara@learnnova.com",
     "phone": "+989121234567",
     "status": "ACTIVE",
     "wallet": {
-      "id": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
-      "userId": "df030de8-6479-4837-a03d-65836fa80d60",
+      "id": 1,
+      "uuid": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
+      "userId": 1,
       "balance": "0.00",
       "currency": "IRT",
       "createdAt": "2026-06-18T08:45:00.000Z",
@@ -155,6 +212,31 @@ Response:
     "createdAt": "2026-06-18T08:45:00.000Z",
     "updatedAt": "2026-06-18T08:45:00.000Z"
   }
+}
+```
+
+### Change Password
+
+```http
+POST /auth/change-password
+```
+
+Request:
+
+```json
+{
+  "phone": "+989121234567",
+  "otp": "123456",
+  "password": "NewStrongPass123"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "message": "Password changed successfully."
 }
 ```
 
@@ -199,7 +281,7 @@ Response: `User[]`
 ### Get User
 
 ```http
-GET /users/:id
+GET /users/:uuid
 ```
 
 Required permission:
@@ -213,7 +295,7 @@ Response: `User`
 ### Update User
 
 ```http
-PATCH /users/:id
+PATCH /users/:uuid
 ```
 
 Required permission:
@@ -246,7 +328,7 @@ Response: updated `User`
 ### Delete User
 
 ```http
-DELETE /users/:id
+DELETE /users/:uuid
 ```
 
 Required permission:
@@ -259,7 +341,8 @@ Response:
 
 ```json
 {
-  "id": "df030de8-6479-4837-a03d-65836fa80d60",
+  "id": 1,
+  "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
   "deleted": true
 }
 ```
@@ -278,8 +361,9 @@ Response:
 
 ```json
 {
-  "id": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
-  "userId": "df030de8-6479-4837-a03d-65836fa80d60",
+  "id": 1,
+  "uuid": "3d6f3206-6277-449c-a782-e58ac3ddc5a1",
+  "userId": 1,
   "balance": "0.00",
   "currency": "IRT",
   "createdAt": "2026-06-18T08:45:00.000Z",
@@ -290,7 +374,7 @@ Response:
 ### Get User Wallet
 
 ```http
-GET /wallets/:userId
+GET /wallets/:userUuid
 ```
 
 Required permission:
@@ -304,7 +388,7 @@ Response: `Wallet`
 ### Update User Wallet Balance
 
 ```http
-PATCH /wallets/:userId/balance
+PATCH /wallets/:userUuid/balance
 ```
 
 Required permission:

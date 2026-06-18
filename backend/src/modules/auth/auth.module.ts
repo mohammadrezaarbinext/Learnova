@@ -8,6 +8,7 @@ import { AuthRepository } from './entity/auth.repository';
 import { LoginHandler } from './handler/login.handler';
 import { RegisterHandler } from './handler/register.handler';
 import { AuthService } from './service/auth.service';
+import { OtpService } from './service/otp.service';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { AuthService } from './service/auth.service';
       }),
     }),
   ],
-  providers: [AuthRepository, RegisterHandler, LoginHandler, AuthService, JwtStrategy],
+  providers: [AuthRepository, RegisterHandler, LoginHandler, AuthService, OtpService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

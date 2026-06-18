@@ -11,8 +11,7 @@ export class RegisterHandler {
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
     return this.usersService.createStudentUser({
-      fullName: dto.fullName,
-      email: dto.email,
+      fullName: dto.phone,
       phone: dto.phone,
       passwordHash,
     });

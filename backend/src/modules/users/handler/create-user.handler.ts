@@ -8,13 +8,13 @@ export class CreateUserHandler {
 
   async createStudent(data: {
     fullName: string;
-    email: string;
-    phone?: string;
+    email?: string;
+    phone: string;
     passwordHash: string;
   }) {
-    const existingUser = await this.userRepository.findByEmail(data.email);
+    const existingUser = await this.userRepository.findByPhone(data.phone);
     if (existingUser) {
-      throw new ConflictException('Email is already registered');
+      throw new ConflictException('Account already exists');
     }
 
     const studentRole = await this.userRepository.findRoleByName(RoleName.STUDENT);

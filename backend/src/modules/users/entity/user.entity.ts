@@ -20,10 +20,11 @@ export const userWithAuthRelations = Prisma.validator<Prisma.UserInclude>()({
 export type UserEntity = Prisma.UserGetPayload<{ include: typeof userWithAuthRelations }>;
 
 export type SanitizedUser = {
-  id: string;
+  id: number;
+  uuid: string;
   fullName: string;
-  email: string;
-  phone: string | null;
+  email: string | null;
+  phone: string;
   status: UserStatus;
   wallet: UserEntity['wallet'];
   roles: string[];
@@ -44,6 +45,7 @@ export function toUserResponse(user: UserEntity): SanitizedUser {
 
   return {
     id: user.id,
+    uuid: user.uuid,
     fullName: user.fullName,
     email: user.email,
     phone: user.phone,
