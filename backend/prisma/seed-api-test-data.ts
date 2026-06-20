@@ -6,6 +6,10 @@ import {
   PaymentTransactionStatus,
   Prisma,
   PrismaClient,
+  QuestionContentType,
+  QuestionType,
+  QuizAttemptStatus,
+  QuizStatus,
   RoleName,
   UserStatus,
 } from '@prisma/client';
@@ -45,6 +49,18 @@ const permissions = [
   'payments.read',
   'payments.purchase',
   'payments.manage',
+  'quizzes.read',
+  'quizzes.create',
+  'quizzes.update',
+  'quizzes.delete',
+  'questions.read',
+  'questions.create',
+  'questions.update',
+  'questions.delete',
+  'quiz_attempts.read',
+  'quiz_attempts.create',
+  'quiz_attempts.submit',
+  'quiz_attempts.grade',
 ];
 
 const roles: Array<{ name: RoleName; description: string }> = [
@@ -69,6 +85,16 @@ const rolePermissions: Record<RoleName, string[]> = {
     'videos.delete',
     'enrollments.read',
     'payments.read',
+    'quizzes.read',
+    'quizzes.create',
+    'quizzes.update',
+    'quizzes.delete',
+    'questions.read',
+    'questions.create',
+    'questions.update',
+    'questions.delete',
+    'quiz_attempts.read',
+    'quiz_attempts.grade',
   ],
   [RoleName.STUDENT]: [
     'student.panel.access',
@@ -78,8 +104,21 @@ const rolePermissions: Record<RoleName, string[]> = {
     'enrollments.create',
     'payments.purchase',
     'payments.read',
+    'quizzes.read',
+    'questions.read',
+    'quiz_attempts.create',
+    'quiz_attempts.submit',
   ],
-  [RoleName.SUPPORT]: ['support.panel.access', 'users.read', 'wallets.read', 'courses.read', 'enrollments.read', 'payments.read'],
+  [RoleName.SUPPORT]: [
+    'support.panel.access',
+    'users.read',
+    'wallets.read',
+    'courses.read',
+    'enrollments.read',
+    'payments.read',
+    'quizzes.read',
+    'quiz_attempts.read',
+  ],
 };
 
 const ids = {
@@ -100,6 +139,19 @@ const ids = {
   paidEnrollment: '00000000-0000-4000-8000-000000000302',
   paidPaymentRequest: '00000000-0000-4000-8000-000000000401',
   paidPaymentTransaction: '00000000-0000-4000-8000-000000000501',
+  paidQuiz: '00000000-0000-4000-8000-000000000601',
+  draftQuiz: '00000000-0000-4000-8000-000000000602',
+  tenQuestionQuiz: '00000000-0000-4000-8000-000000000603',
+  multipleChoiceQuiz: '00000000-0000-4000-8000-000000000604',
+  descriptiveQuiz: '00000000-0000-4000-8000-000000000605',
+  multipleChoiceQuestion: '00000000-0000-4000-8000-000000000701',
+  descriptiveQuestion: '00000000-0000-4000-8000-000000000702',
+  optionA: '00000000-0000-4000-8000-000000000801',
+  optionB: '00000000-0000-4000-8000-000000000802',
+  optionC: '00000000-0000-4000-8000-000000000803',
+  studentQuizAttempt: '00000000-0000-4000-8000-000000000901',
+  multipleChoiceAnswer: '00000000-0000-4000-8000-000000001001',
+  descriptiveAnswer: '00000000-0000-4000-8000-000000001002',
 };
 
 type DemoUserInput = {
@@ -460,9 +512,228 @@ async function upsertDemoData() {
     },
   });
 
+  const paidQuiz = await prisma.quiz.upsert({
+    where: { uuid: ids.paidQuiz },
+    update: {
+      courseId: paidCourse.id,
+      title: 'Advanced NestJS Final Exam',
+      description: 'Published quiz for testing questions, attempts, submit, and grading.',
+      durationMinutes: 45,
+      startsAt: null,
+      endsAt: null,
+      status: QuizStatus.PUBLISHED,
+    },
+    create: {
+      uuid: ids.paidQuiz,
+      courseId: paidCourse.id,
+      title: 'Advanced NestJS Final Exam',
+      description: 'Published quiz for testing questions, attempts, submit, and grading.',
+      durationMinutes: 45,
+      startsAt: null,
+      endsAt: null,
+      status: QuizStatus.PUBLISHED,
+    },
+  });
+
+  const draftQuiz = await prisma.quiz.upsert({
+    where: { uuid: ids.draftQuiz },
+    update: {
+      courseId: draftCourse.id,
+      title: 'Draft Teacher Quiz',
+      description: 'Draft quiz for testing teacher/admin visibility.',
+      durationMinutes: 30,
+      startsAt: null,
+      endsAt: null,
+      status: QuizStatus.DRAFT,
+    },
+    create: {
+      uuid: ids.draftQuiz,
+      courseId: draftCourse.id,
+      title: 'Draft Teacher Quiz',
+      description: 'Draft quiz for testing teacher/admin visibility.',
+      durationMinutes: 30,
+      startsAt: null,
+      endsAt: null,
+      status: QuizStatus.DRAFT,
+    },
+  });
+
+  const multipleChoiceQuestion = await prisma.question.upsert({
+    where: { uuid: ids.multipleChoiceQuestion },
+    update: {
+      quizId: paidQuiz.id,
+      type: QuestionType.MULTIPLE_CHOICE,
+      contentType: QuestionContentType.TEXT,
+      content: 'Which NestJS concept is used for dependency injection?',
+      imageUrl: null,
+      points: '1.00',
+      orderIndex: 1,
+      answerKey: 'provider',
+    },
+    create: {
+      uuid: ids.multipleChoiceQuestion,
+      quizId: paidQuiz.id,
+      type: QuestionType.MULTIPLE_CHOICE,
+      contentType: QuestionContentType.TEXT,
+      content: 'Which NestJS concept is used for dependency injection?',
+      imageUrl: null,
+      points: '1.00',
+      orderIndex: 1,
+      answerKey: 'provider',
+    },
+  });
+
+  await upsertQuestionOption(ids.optionA, multipleChoiceQuestion.id, {
+    contentType: QuestionContentType.TEXT,
+    content: 'Provider',
+    imageUrl: null,
+    orderIndex: 1,
+    isCorrect: true,
+  });
+  await upsertQuestionOption(ids.optionB, multipleChoiceQuestion.id, {
+    contentType: QuestionContentType.TEXT,
+    content: 'Migration',
+    imageUrl: null,
+    orderIndex: 2,
+    isCorrect: false,
+  });
+  await upsertQuestionOption(ids.optionC, multipleChoiceQuestion.id, {
+    contentType: QuestionContentType.TEXT,
+    content: 'Stylesheet',
+    imageUrl: null,
+    orderIndex: 3,
+    isCorrect: false,
+  });
+
+  const descriptiveQuestion = await prisma.question.upsert({
+    where: { uuid: ids.descriptiveQuestion },
+    update: {
+      quizId: paidQuiz.id,
+      type: QuestionType.DESCRIPTIVE,
+      contentType: QuestionContentType.TEXT,
+      content: 'Explain why guards are useful in NestJS APIs.',
+      imageUrl: null,
+      points: '4.00',
+      orderIndex: 2,
+      answerKey: null,
+    },
+    create: {
+      uuid: ids.descriptiveQuestion,
+      quizId: paidQuiz.id,
+      type: QuestionType.DESCRIPTIVE,
+      contentType: QuestionContentType.TEXT,
+      content: 'Explain why guards are useful in NestJS APIs.',
+      imageUrl: null,
+      points: '4.00',
+      orderIndex: 2,
+      answerKey: null,
+    },
+  });
+
+  const studentAttempt = await prisma.quizAttempt.upsert({
+    where: { uuid: ids.studentQuizAttempt },
+    update: {
+      quizId: paidQuiz.id,
+      studentId: student.id,
+      status: QuizAttemptStatus.SUBMITTED,
+      score: '1.00',
+      submittedAt: new Date(),
+    },
+    create: {
+      uuid: ids.studentQuizAttempt,
+      quizId: paidQuiz.id,
+      studentId: student.id,
+      status: QuizAttemptStatus.SUBMITTED,
+      score: '1.00',
+      submittedAt: new Date(),
+    },
+  });
+
+  await prisma.questionAnswer.upsert({
+    where: { uuid: ids.multipleChoiceAnswer },
+    update: {
+      attemptId: studentAttempt.id,
+      questionId: multipleChoiceQuestion.id,
+      selectedOptionId: (await prisma.questionOption.findUniqueOrThrow({ where: { uuid: ids.optionA } })).id,
+      answerContentType: null,
+      answerContent: Prisma.DbNull,
+      answerImageUrl: null,
+      score: '1.00',
+      isCorrect: true,
+      gradedAt: new Date(),
+    },
+    create: {
+      uuid: ids.multipleChoiceAnswer,
+      attemptId: studentAttempt.id,
+      questionId: multipleChoiceQuestion.id,
+      selectedOptionId: (await prisma.questionOption.findUniqueOrThrow({ where: { uuid: ids.optionA } })).id,
+      answerContentType: null,
+      answerImageUrl: null,
+      score: '1.00',
+      isCorrect: true,
+      gradedAt: new Date(),
+    },
+  });
+
+  await prisma.questionAnswer.upsert({
+    where: { uuid: ids.descriptiveAnswer },
+    update: {
+      attemptId: studentAttempt.id,
+      questionId: descriptiveQuestion.id,
+      selectedOptionId: null,
+      answerContentType: QuestionContentType.TEXT,
+      answerContent: 'Guards protect routes before handlers run and centralize authorization logic.',
+      answerImageUrl: null,
+      score: null,
+      isCorrect: null,
+      gradedAt: null,
+    },
+    create: {
+      uuid: ids.descriptiveAnswer,
+      attemptId: studentAttempt.id,
+      questionId: descriptiveQuestion.id,
+      selectedOptionId: null,
+      answerContentType: QuestionContentType.TEXT,
+      answerContent: 'Guards protect routes before handlers run and centralize authorization logic.',
+      answerImageUrl: null,
+      score: null,
+      isCorrect: null,
+      gradedAt: null,
+    },
+  });
+
+  const tenQuestionQuiz = await upsertQuiz(ids.tenQuestionQuiz, paidCourse.id, {
+    title: 'Full Mixed Exam - 10 Questions',
+    description: 'Published 10-question exam with multiple-choice and descriptive questions.',
+    durationMinutes: 60,
+    status: QuizStatus.PUBLISHED,
+  });
+  await seedTenQuestionQuiz(tenQuestionQuiz.id);
+
+  const multipleChoiceQuiz = await upsertQuiz(ids.multipleChoiceQuiz, freeCourse.id, {
+    title: 'Multiple Choice Practice Exam',
+    description: 'Short published exam with only multiple-choice questions.',
+    durationMinutes: 20,
+    status: QuizStatus.PUBLISHED,
+  });
+  await seedMultipleChoicePracticeQuiz(multipleChoiceQuiz.id);
+
+  const descriptiveQuiz = await upsertQuiz(ids.descriptiveQuiz, paidCourse.id, {
+    title: 'Descriptive Practice Exam',
+    description: 'Short published exam with descriptive questions.',
+    durationMinutes: 25,
+    status: QuizStatus.PUBLISHED,
+  });
+  await seedDescriptivePracticeQuiz(descriptiveQuiz.id);
+
+  await resetBuyerQuizAttemptState(buyer.id, [paidQuiz.id, tenQuestionQuiz.id, multipleChoiceQuiz.id, descriptiveQuiz.id]);
+
   return {
     users: { admin, teacher, student, buyer, support },
     courses: { freeCourse, paidCourse, draftCourse },
+    quizzes: { paidQuiz, draftQuiz, tenQuestionQuiz, multipleChoiceQuiz, descriptiveQuiz },
+    questions: { multipleChoiceQuestion, descriptiveQuestion },
+    attempt: studentAttempt,
     paymentRequest,
   };
 }
@@ -510,6 +781,263 @@ function upsertEnrollment(uuid: string, studentId: number, courseId: number) {
   });
 }
 
+type DemoQuestionOptionInput = {
+  contentType: QuestionContentType;
+  content: Prisma.InputJsonValue;
+  imageUrl: string | null;
+  orderIndex: number;
+  isCorrect: boolean;
+};
+
+function upsertQuestionOption(uuid: string, questionId: number, input: DemoQuestionOptionInput) {
+  return prisma.questionOption.upsert({
+    where: { uuid },
+    update: {
+      questionId,
+      ...input,
+    },
+    create: {
+      uuid,
+      questionId,
+      ...input,
+    },
+  });
+}
+
+type DemoQuizInput = {
+  title: string;
+  description: string;
+  durationMinutes: number;
+  status: QuizStatus;
+};
+
+function upsertQuiz(uuid: string, courseId: number, input: DemoQuizInput) {
+  return prisma.quiz.upsert({
+    where: { uuid },
+    update: {
+      courseId,
+      title: input.title,
+      description: input.description,
+      durationMinutes: input.durationMinutes,
+      startsAt: null,
+      endsAt: null,
+      status: input.status,
+    },
+    create: {
+      uuid,
+      courseId,
+      title: input.title,
+      description: input.description,
+      durationMinutes: input.durationMinutes,
+      startsAt: null,
+      endsAt: null,
+      status: input.status,
+    },
+  });
+}
+
+async function seedTenQuestionQuiz(quizId: number) {
+  const questions = [
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which decorator defines a NestJS controller?', answer: '@Controller' },
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which file usually bootstraps a NestJS app?', answer: 'main.ts' },
+    { type: QuestionType.DESCRIPTIVE, content: 'Explain the role of dependency injection in NestJS.' },
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which class is commonly used to protect routes?', answer: 'Guard' },
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which ORM is used internally in this backend?', answer: 'Prisma' },
+    { type: QuestionType.DESCRIPTIVE, content: 'Describe how modules help organize a NestJS backend.' },
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which HTTP status family means client error?', answer: '4xx' },
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which token type is sent in Authorization Bearer?', answer: 'JWT' },
+    { type: QuestionType.MULTIPLE_CHOICE, content: 'Which command syncs Prisma schema in local dev?', answer: 'prisma db push' },
+    { type: QuestionType.DESCRIPTIVE, content: 'Explain why quiz answer keys must be hidden from students.' },
+  ];
+
+  for (const [index, question] of questions.entries()) {
+    const questionNumber = index + 1;
+    const questionUuid = fixedUuid(710 + index);
+
+    if (question.type === QuestionType.DESCRIPTIVE) {
+      await upsertDemoQuestion(questionUuid, quizId, {
+        type: QuestionType.DESCRIPTIVE,
+        contentType: QuestionContentType.TEXT,
+        content: question.content,
+        imageUrl: null,
+        points: '4.00',
+        orderIndex: questionNumber,
+        answerKey: null,
+        options: [],
+      });
+      continue;
+    }
+
+    const baseOptionNumber = 820 + index * 4;
+    await upsertDemoQuestion(questionUuid, quizId, {
+      type: QuestionType.MULTIPLE_CHOICE,
+      contentType: QuestionContentType.TEXT,
+      content: question.content,
+      imageUrl: null,
+      points: '1.00',
+      orderIndex: questionNumber,
+      answerKey: question.answer,
+      options: [
+        {
+          uuid: fixedUuid(baseOptionNumber),
+          contentType: QuestionContentType.TEXT,
+          content: question.answer ?? 'Correct',
+          imageUrl: null,
+          orderIndex: 1,
+          isCorrect: true,
+        },
+        {
+          uuid: fixedUuid(baseOptionNumber + 1),
+          contentType: QuestionContentType.TEXT,
+          content: 'Repository',
+          imageUrl: null,
+          orderIndex: 2,
+          isCorrect: false,
+        },
+        {
+          uuid: fixedUuid(baseOptionNumber + 2),
+          contentType: QuestionContentType.TEXT,
+          content: 'Stylesheet',
+          imageUrl: null,
+          orderIndex: 3,
+          isCorrect: false,
+        },
+        {
+          uuid: fixedUuid(baseOptionNumber + 3),
+          contentType: QuestionContentType.TEXT,
+          content: 'Webpack plugin',
+          imageUrl: null,
+          orderIndex: 4,
+          isCorrect: false,
+        },
+      ],
+    });
+  }
+}
+
+async function seedMultipleChoicePracticeQuiz(quizId: number) {
+  for (let index = 0; index < 3; index += 1) {
+    await upsertDemoQuestion(fixedUuid(760 + index), quizId, {
+      type: QuestionType.MULTIPLE_CHOICE,
+      contentType: QuestionContentType.TEXT,
+      content: `Practice MC question ${index + 1}`,
+      imageUrl: null,
+      points: '1.00',
+      orderIndex: index + 1,
+      answerKey: 'A',
+      options: [
+        {
+          uuid: fixedUuid(900 + index * 3),
+          contentType: QuestionContentType.TEXT,
+          content: 'A',
+          imageUrl: null,
+          orderIndex: 1,
+          isCorrect: true,
+        },
+        {
+          uuid: fixedUuid(901 + index * 3),
+          contentType: QuestionContentType.TEXT,
+          content: 'B',
+          imageUrl: null,
+          orderIndex: 2,
+          isCorrect: false,
+        },
+        {
+          uuid: fixedUuid(902 + index * 3),
+          contentType: QuestionContentType.TEXT,
+          content: 'C',
+          imageUrl: null,
+          orderIndex: 3,
+          isCorrect: false,
+        },
+      ],
+    });
+  }
+}
+
+async function seedDescriptivePracticeQuiz(quizId: number) {
+  const prompts = [
+    'Describe how authentication and authorization differ.',
+    'Explain why transactions matter when creating payment and enrollment records.',
+    'Describe how you would model course progress for students.',
+  ];
+
+  for (const [index, prompt] of prompts.entries()) {
+    await upsertDemoQuestion(fixedUuid(780 + index), quizId, {
+      type: QuestionType.DESCRIPTIVE,
+      contentType: QuestionContentType.TEXT,
+      content: prompt,
+      imageUrl: null,
+      points: '5.00',
+      orderIndex: index + 1,
+      answerKey: null,
+      options: [],
+    });
+  }
+}
+
+type DemoQuestionInput = {
+  type: QuestionType;
+  contentType: QuestionContentType;
+  content: Prisma.InputJsonValue;
+  imageUrl: string | null;
+  points: string;
+  orderIndex: number;
+  answerKey: Prisma.InputJsonValue | null;
+  options: Array<DemoQuestionOptionInput & { uuid: string }>;
+};
+
+async function upsertDemoQuestion(uuid: string, quizId: number, input: DemoQuestionInput) {
+  const question = await prisma.question.upsert({
+    where: { uuid },
+    update: {
+      quizId,
+      type: input.type,
+      contentType: input.contentType,
+      content: input.content,
+      imageUrl: input.imageUrl,
+      points: input.points,
+      orderIndex: input.orderIndex,
+      answerKey: input.answerKey ?? Prisma.DbNull,
+    },
+    create: {
+      uuid,
+      quizId,
+      type: input.type,
+      contentType: input.contentType,
+      content: input.content,
+      imageUrl: input.imageUrl,
+      points: input.points,
+      orderIndex: input.orderIndex,
+      answerKey: input.answerKey ?? undefined,
+    },
+  });
+
+  if (input.options.length === 0) {
+    await prisma.questionOption.deleteMany({ where: { questionId: question.id } });
+    return question;
+  }
+
+  for (const option of input.options) {
+    await upsertQuestionOption(option.uuid, question.id, option);
+  }
+
+  await prisma.questionOption.deleteMany({
+    where: {
+      questionId: question.id,
+      uuid: {
+        notIn: input.options.map((option) => option.uuid),
+      },
+    },
+  });
+
+  return question;
+}
+
+function fixedUuid(suffix: number): string {
+  return `00000000-0000-4000-8000-${String(suffix).padStart(12, '0')}`;
+}
+
 async function resetBuyerPurchaseState(buyerId: number, paidCourseId: number) {
   await prisma.paymentRequest.deleteMany({
     where: {
@@ -522,6 +1050,17 @@ async function resetBuyerPurchaseState(buyerId: number, paidCourseId: number) {
     where: {
       studentId: buyerId,
       courseId: paidCourseId,
+    },
+  });
+}
+
+async function resetBuyerQuizAttemptState(buyerId: number, quizIds: number[]) {
+  await prisma.quizAttempt.deleteMany({
+    where: {
+      studentId: buyerId,
+      quizId: {
+        in: quizIds,
+      },
     },
   });
 }
@@ -542,6 +1081,14 @@ async function main() {
     { type: 'FREE_COURSE', uuid: seeded.courses.freeCourse.uuid, price: seeded.courses.freeCourse.price.toString() },
     { type: 'PAID_COURSE', uuid: seeded.courses.paidCourse.uuid, price: seeded.courses.paidCourse.price.toString() },
     { type: 'DRAFT_COURSE', uuid: seeded.courses.draftCourse.uuid, price: seeded.courses.draftCourse.price.toString() },
+    { type: 'PAID_QUIZ', uuid: seeded.quizzes.paidQuiz.uuid, price: '-' },
+    { type: 'DRAFT_QUIZ', uuid: seeded.quizzes.draftQuiz.uuid, price: '-' },
+    { type: 'TEN_QUESTION_QUIZ', uuid: seeded.quizzes.tenQuestionQuiz.uuid, price: '-' },
+    { type: 'MC_PRACTICE_QUIZ', uuid: seeded.quizzes.multipleChoiceQuiz.uuid, price: '-' },
+    { type: 'DESCRIPTIVE_QUIZ', uuid: seeded.quizzes.descriptiveQuiz.uuid, price: '-' },
+    { type: 'MC_QUESTION', uuid: seeded.questions.multipleChoiceQuestion.uuid, price: '-' },
+    { type: 'DESC_QUESTION', uuid: seeded.questions.descriptiveQuestion.uuid, price: '-' },
+    { type: 'STUDENT_ATTEMPT', uuid: seeded.attempt.uuid, price: '-' },
     { type: 'PAYMENT_REQUEST', uuid: seeded.paymentRequest.uuid, price: seeded.paymentRequest.amount.toString() },
   ]);
 }

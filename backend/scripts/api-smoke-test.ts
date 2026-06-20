@@ -6,6 +6,11 @@ const demo = {
   student: { phone: '+989120000003' },
   buyer: { phone: '+989120000004' },
   paidCourseUuid: '00000000-0000-4000-8000-000000000102',
+  paidQuizUuid: '00000000-0000-4000-8000-000000000601',
+  tenQuestionQuizUuid: '00000000-0000-4000-8000-000000000603',
+  multipleChoiceQuestionUuid: '00000000-0000-4000-8000-000000000701',
+  correctOptionUuid: '00000000-0000-4000-8000-000000000801',
+  descriptiveAnswerUuid: '00000000-0000-4000-8000-000000001002',
   paymentRequestUuid: '00000000-0000-4000-8000-000000000401',
 };
 
@@ -88,8 +93,36 @@ async function main() {
   await api(`/courses/${demo.paidCourseUuid}`);
   await api(`/courses/${demo.paidCourseUuid}/videos`, { token: buyerToken });
   await api(`/courses/${demo.paidCourseUuid}/purchase`, { method: 'POST', token: buyerToken });
+  await api(`/courses/${demo.paidCourseUuid}/quizzes`, { token: buyerToken });
+  await api(`/quizzes/${demo.paidQuizUuid}`, { token: buyerToken });
+  const tenQuestionQuiz = (await api(`/quizzes/${demo.tenQuestionQuizUuid}`, { token: buyerToken })) as { questions?: unknown[] };
+  if (tenQuestionQuiz.questions?.length !== 10) {
+    throw new Error(`Expected ten-question quiz to have 10 questions, got ${tenQuestionQuiz.questions?.length ?? 0}`);
+  }
+  const buyerAttempt = (await api(`/quizzes/${demo.paidQuizUuid}/attempts/start`, {
+    method: 'POST',
+    token: buyerToken,
+  })) as { uuid: string };
+  await api(`/quiz-attempts/${buyerAttempt.uuid}/answers`, {
+    method: 'POST',
+    token: buyerToken,
+    body: {
+      questionId: demo.multipleChoiceQuestionUuid,
+      selectedOptionId: demo.correctOptionUuid,
+    },
+  });
+  await api(`/quiz-attempts/${buyerAttempt.uuid}/submit`, { method: 'POST', token: buyerToken });
   await api('/payments/me', { token: buyerToken });
   await api(`/payments/${demo.paymentRequestUuid}`, { token: adminToken });
+  await api(`/quizzes/${demo.paidQuizUuid}/attempts`, { token: adminToken });
+  await api(`/question-answers/${demo.descriptiveAnswerUuid}/grade`, {
+    method: 'PATCH',
+    token: adminToken,
+    body: {
+      score: '4.00',
+      isCorrect: true,
+    },
+  });
   await api('/enrollments/me', { token: studentToken });
   await api('/users', { token: adminToken });
 

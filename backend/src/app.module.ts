@@ -10,6 +10,9 @@ import { CoursesModule } from './modules/courses/courses.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { QuestionsModule } from './modules/questions/questions.module';
+import { QuizAttemptsModule } from './modules/quiz-attempts/quiz-attempts.module';
+import { QuizzesModule } from './modules/quizzes/quizzes.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
 import { VideosModule } from './modules/videos/videos.module';
@@ -33,6 +36,9 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     VideosModule,
     EnrollmentsModule,
     PaymentsModule,
+    QuizzesModule,
+    QuestionsModule,
+    QuizAttemptsModule,
     HttpModule,
   ],
 })

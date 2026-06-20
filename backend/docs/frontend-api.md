@@ -906,6 +906,298 @@ Allowed `provider` values:
 MOCK
 ```
 
+## Quiz And Exam Endpoints
+
+All quiz, question, and attempt endpoints require JWT auth.
+
+### List Course Quizzes
+
+```http
+GET /courses/:courseId/quizzes
+```
+
+Required permission:
+
+```text
+quizzes.read
+```
+
+Student must be enrolled in the course. Teacher can view own course quizzes. Admin and support can view all. Students only see published quizzes.
+
+### Create Quiz
+
+```http
+POST /courses/:courseId/quizzes
+```
+
+Required permission:
+
+```text
+quizzes.create
+```
+
+Only course owner teacher or admin.
+
+### Get Quiz With Questions
+
+```http
+GET /quizzes/:quizId
+```
+
+Required permission:
+
+```text
+quizzes.read
+```
+
+For students, `answerKey` and option `isCorrect` are hidden. Teacher owner and admin receive correct answers.
+
+### Update Quiz
+
+```http
+PATCH /quizzes/:quizId
+```
+
+Required permission:
+
+```text
+quizzes.update
+```
+
+Only course owner teacher or admin.
+
+### Delete Quiz
+
+```http
+DELETE /quizzes/:quizId
+```
+
+Required permission:
+
+```text
+quizzes.delete
+```
+
+Only course owner teacher or admin.
+
+### Create Question
+
+```http
+POST /quizzes/:quizId/questions
+```
+
+Required permission:
+
+```text
+questions.create
+```
+
+`MULTIPLE_CHOICE` requires `options` and exactly one correct option. `DESCRIPTIVE` questions do not require options.
+
+### Update Question
+
+```http
+PATCH /questions/:questionId
+```
+
+Required permission:
+
+```text
+questions.update
+```
+
+### Delete Question
+
+```http
+DELETE /questions/:questionId
+```
+
+Required permission:
+
+```text
+questions.delete
+```
+
+### Start Quiz Attempt
+
+```http
+POST /quizzes/:quizId/attempts/start
+```
+
+Required permission:
+
+```text
+quiz_attempts.create
+```
+
+Only students can start attempts. Student must be enrolled, quiz must be `PUBLISHED`, and only one `IN_PROGRESS` attempt is allowed for the same quiz/student.
+
+### Save Answer
+
+```http
+POST /quiz-attempts/:attemptId/answers
+```
+
+Required permission:
+
+```text
+quiz_attempts.submit
+```
+
+Request for multiple choice:
+
+```json
+{
+  "questionId": "00000000-0000-4000-8000-000000000701",
+  "selectedOptionId": "00000000-0000-4000-8000-000000000801"
+}
+```
+
+Request for descriptive:
+
+```json
+{
+  "questionId": "00000000-0000-4000-8000-000000000702",
+  "answerContentType": "TEXT",
+  "answerContent": "My answer"
+}
+```
+
+### Submit Attempt
+
+```http
+POST /quiz-attempts/:attemptId/submit
+```
+
+Required permission:
+
+```text
+quiz_attempts.submit
+```
+
+Multiple-choice answers are auto-graded. Attempts become `GRADED` when all answers are graded, otherwise `SUBMITTED`.
+
+### My Quiz Attempts
+
+```http
+GET /quiz-attempts/me
+```
+
+Returns current user's quiz attempts.
+
+### Quiz Attempts
+
+```http
+GET /quizzes/:quizId/attempts
+```
+
+Required permission:
+
+```text
+quiz_attempts.read
+```
+
+Teacher can view attempts for own quiz. Admin and support can view all.
+
+### Grade Answer
+
+```http
+PATCH /question-answers/:answerId/grade
+```
+
+Required permission:
+
+```text
+quiz_attempts.grade
+```
+
+Request:
+
+```json
+{
+  "score": "4.00",
+  "isCorrect": true
+}
+```
+
+Teacher owner or admin only. Recalculates attempt score and marks attempt `GRADED` when all answers are graded.
+
+### Quiz Socket Events
+
+Namespace:
+
+```text
+/quiz
+```
+
+The quiz socket is channel-based. For exam timers, join the `quiz:attempt` channel with the started attempt uuid.
+
+Client emits:
+
+```text
+socket:join { channel: "quiz:attempt", attemptUuid }
+socket:leave { channel: "quiz:attempt", attemptUuid }
+```
+
+Example:
+
+```js
+const socket = io('http://localhost:3001/quiz');
+
+socket.emit('socket:join', {
+  channel: 'quiz:attempt',
+  attemptUuid: '<attemptUuid>',
+});
+
+socket.on('quiz:state', (payload) => {
+  console.log(payload.remainingSeconds, payload.expired);
+});
+
+socket.on('quiz:timer', (payload) => {
+  console.log(payload.remainingSeconds);
+});
+```
+
+Backward-compatible client events are still accepted:
+
+```text
+quiz:join { attemptUuid }
+quiz:leave { attemptUuid }
+```
+
+Server emits:
+
+```text
+socket:joined { channel, room, attemptUuid }
+socket:left { channel, room, attemptUuid }
+quiz:state QuizAttemptSocketState
+quiz:timer { channel, attemptUuid, remainingSeconds, serverTime? }
+quiz:expired { channel, attemptUuid }
+quiz:submitted { channel, attemptUuid }
+socket:error { channel, message }
+```
+
+`QuizAttemptSocketState` shape:
+
+```json
+{
+  "channel": "quiz:attempt",
+  "room": "quiz:attempt:7c93df3c-c2f0-4f7f-88d4-78a6fd2a3e41",
+  "attemptUuid": "7c93df3c-c2f0-4f7f-88d4-78a6fd2a3e41",
+  "quizUuid": "17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec",
+  "quizTitle": "Full Mixed Exam - 10 Questions",
+  "status": "IN_PROGRESS",
+  "startedAt": "2026-06-18T08:45:00.000Z",
+  "submittedAt": null,
+  "durationMinutes": 60,
+  "endsAt": "2026-06-18T09:45:00.000Z",
+  "expiresAt": "2026-06-18T09:45:00.000Z",
+  "remainingSeconds": 3599,
+  "expired": false,
+  "serverTime": "2026-06-18T08:45:01.000Z"
+}
+```
+
 ## Common Errors
 
 Validation error:
@@ -990,6 +1282,18 @@ enrollments.delete
 payments.read
 payments.purchase
 payments.manage
+quizzes.read
+quizzes.create
+quizzes.update
+quizzes.delete
+questions.read
+questions.create
+questions.update
+questions.delete
+quiz_attempts.read
+quiz_attempts.create
+quiz_attempts.submit
+quiz_attempts.grade
 ```
 
 Default `STUDENT` permissions:
@@ -1002,6 +1306,10 @@ videos.read
 enrollments.create
 payments.purchase
 payments.read
+quizzes.read
+questions.read
+quiz_attempts.create
+quiz_attempts.submit
 ```
 
 ## Local Startup

@@ -14,7 +14,8 @@
     "db:prepare": "npm run prisma:generate && npm run db:push && npm run db:seed",
     "db:seed": "prisma db seed",
     "db:seed:test-data": "tsx prisma/seed-api-test-data.ts",
-    "test:api:smoke": "tsx scripts/api-smoke-test.ts"
+    "test:api:smoke": "tsx scripts/api-smoke-test.ts",
+    "test:socket:smoke": "tsx scripts/socket-smoke-test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -26,7 +27,9 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/platform-socket.io": "^10.4.22",
     "@nestjs/swagger": "^7.4.2",
+    "@nestjs/websockets": "^10.4.22",
     "@prisma/client": "^6.19.3",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
@@ -36,6 +39,8 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^1.0.0"
   },
@@ -44,7 +49,7 @@
     "@nestjs/schematics": "^10.2.3",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.21",
-    "@types/node": "^20.17.10",
+    "@types/node": "^20.19.43",
     "@types/passport-jwt": "^4.0.1",
     "@types/swagger-ui-express": "^4.1.7",
     "prisma": "^6.19.3",

@@ -39,6 +39,18 @@ const permissions = [
   'payments.read',
   'payments.purchase',
   'payments.manage',
+  'quizzes.read',
+  'quizzes.create',
+  'quizzes.update',
+  'quizzes.delete',
+  'questions.read',
+  'questions.create',
+  'questions.update',
+  'questions.delete',
+  'quiz_attempts.read',
+  'quiz_attempts.create',
+  'quiz_attempts.submit',
+  'quiz_attempts.grade',
 ];
 
 const rolePermissions: Record<RoleName, string[]> = {
@@ -56,6 +68,16 @@ const rolePermissions: Record<RoleName, string[]> = {
     'videos.delete',
     'enrollments.read',
     'payments.read',
+    'quizzes.read',
+    'quizzes.create',
+    'quizzes.update',
+    'quizzes.delete',
+    'questions.read',
+    'questions.create',
+    'questions.update',
+    'questions.delete',
+    'quiz_attempts.read',
+    'quiz_attempts.grade',
   ],
   [RoleName.STUDENT]: [
     'student.panel.access',
@@ -65,8 +87,21 @@ const rolePermissions: Record<RoleName, string[]> = {
     'enrollments.create',
     'payments.purchase',
     'payments.read',
+    'quizzes.read',
+    'questions.read',
+    'quiz_attempts.create',
+    'quiz_attempts.submit',
   ],
-  [RoleName.SUPPORT]: ['support.panel.access', 'users.read', 'wallets.read', 'courses.read', 'enrollments.read', 'payments.read'],
+  [RoleName.SUPPORT]: [
+    'support.panel.access',
+    'users.read',
+    'wallets.read',
+    'courses.read',
+    'enrollments.read',
+    'payments.read',
+    'quizzes.read',
+    'quiz_attempts.read',
+  ],
 };
 
 async function main() {
