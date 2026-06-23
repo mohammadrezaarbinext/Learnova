@@ -31,6 +31,10 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   PORT: number;
+
+  @IsString()
+  @IsOptional()
+  FRONTEND_URL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
