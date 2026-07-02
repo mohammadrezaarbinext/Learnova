@@ -4,7 +4,7 @@ import { UserResponse } from './user.response';
 export class AuthResponse {
   @ApiProperty({
     example:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZjAzMGRlOC02NDc5LTQ4MzctYTAzZC02NTgzNmZhODBkNjAiLCJwaG9uZSI6Iis5ODkxMjEyMzQ1NjciLCJqdGkiOiJiNWZiMjk1MS1mYzczLTQ0OWYtYTNhNS0yYjUwZTVjMjNlNDEifQ.signature',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZjAzMGRlOC02NDc5LTQ4MzctYTAzZC02NTgzNmZhODBkNjAiLCJwaG9uZSI6IjA5OTIwMjA2MzMyIiwianRpIjoiYjVmYjI5NTEtZmM3My00NDlmLWEzYTNhNS0yYjUwZTVjMjNlNDEifQ.signature',
   })
   accessToken: string;
 

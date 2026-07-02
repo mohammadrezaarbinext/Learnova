@@ -8,10 +8,10 @@ class CourseTeacherResponse {
   @ApiProperty({ example: '17edc1b7-3eb0-4e7f-b8ad-fb2c511054ec', format: 'uuid' })
   uuid: string;
 
-  @ApiProperty({ example: '+989121234567' })
+  @ApiProperty({ example: '09920206332' })
   fullName: string;
 
-  @ApiProperty({ example: '+989121234567' })
+  @ApiProperty({ example: '09920206332' })
   phone: string;
 
   @ApiPropertyOptional({ example: 'teacher@learnnova.com', nullable: true })

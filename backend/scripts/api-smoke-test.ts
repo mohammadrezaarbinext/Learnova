@@ -2,9 +2,9 @@ const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:3001/api';
 
 const demo = {
   password: 'TestPass123',
-  admin: { phone: '+989120000001' },
-  student: { phone: '+989120000003' },
-  buyer: { phone: '+989120000004' },
+  admin: { phone: '09120000001' },
+  student: { phone: '09120000003' },
+  buyer: { phone: '09120000004' },
   paidCourseUuid: '00000000-0000-4000-8000-000000000102',
   paidQuizUuid: '00000000-0000-4000-8000-000000000601',
   tenQuestionQuizUuid: '00000000-0000-4000-8000-000000000603',

@@ -17,6 +17,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
 import { VideosModule } from './modules/videos/videos.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     VideosModule,
     EnrollmentsModule,
     PaymentsModule,
+    StorageModule,
     QuizzesModule,
     QuestionsModule,
     QuizAttemptsModule,

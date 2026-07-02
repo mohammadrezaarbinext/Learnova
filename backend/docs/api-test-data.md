@@ -21,11 +21,11 @@ TestPass123
 ```
 
 ```text
-ADMIN            +989120000001  admin@learnnova.test
-TEACHER          +989120000002  teacher@learnnova.test
-STUDENT_ENROLLED +989120000003  student@learnnova.test
-STUDENT_BUYER    +989120000004  buyer@learnnova.test
-SUPPORT          +989120000005  support@learnnova.test
+ADMIN            09120000001  admin@learnnova.test
+TEACHER          09120000002  teacher@learnnova.test
+STUDENT_ENROLLED 09120000003  student@learnnova.test
+STUDENT_BUYER    09120000004  buyer@learnnova.test
+SUPPORT          09120000005  support@learnnova.test
 ```
 
 `STUDENT_ENROLLED` already has enrollments, a successful mock payment, and a submitted quiz attempt. `STUDENT_BUYER` is clean and useful for testing `POST /courses/:courseId/purchase` and then starting a fresh quiz attempt.
@@ -82,7 +82,7 @@ Login as buyer:
 ```bash
 curl -s http://localhost:3001/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"phone":"+989120000004","password":"TestPass123"}'
+  -d '{"phone":"09120000004","password":"TestPass123"}'
 ```
 
 List published courses:

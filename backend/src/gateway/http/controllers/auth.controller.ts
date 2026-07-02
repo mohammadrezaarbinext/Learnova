@@ -18,7 +18,7 @@ import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { AuthUser } from '../../../common/types/auth-user.type';
 import { AuthService } from '../../../modules/auth/service/auth.service';
 import { LoginRequest } from '../request/auth/login.request';
-import { ChangePasswordRequest, OtpRequest, RegisterRequest } from '../request/auth/register.request';
+import { ChangePasswordRequest, OtpRequest, RegisterRequest, VerifyOtpRequest } from '../request/auth/register.request';
 import { AuthResponse, MessageResponse, OtpResponse } from '../response/auth.response';
 import { ErrorResponse } from '../response/error.response';
 import { UserResponse } from '../response/user.response';
@@ -39,6 +39,20 @@ export class AuthController {
   @ApiNotFoundResponse({ description: 'LOGIN or CHANGE_PASSWORD OTP requires an existing account.', type: ErrorResponse })
   requestOtp(@Body() dto: OtpRequest) {
     return this.authService.requestOtp(dto);
+  }
+
+  @Post('verify-otp')
+  @ApiOperation({ summary: 'Verify OTP by phone' })
+  @ApiOkResponse({
+    description: 'OTP is valid. It is not consumed until register, login, or change-password uses it.',
+    type: MessageResponse,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid request body.', type: ErrorResponse })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired OTP.', type: ErrorResponse })
+  @ApiConflictResponse({ description: 'REGISTER OTP cannot be verified for an existing account.', type: ErrorResponse })
+  @ApiNotFoundResponse({ description: 'LOGIN or CHANGE_PASSWORD OTP requires an existing account.', type: ErrorResponse })
+  verifyOtp(@Body() dto: VerifyOtpRequest) {
+    return this.authService.verifyOtp(dto);
   }
 
   @Post('register')

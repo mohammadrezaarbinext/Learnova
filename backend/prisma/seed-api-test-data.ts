@@ -13,8 +13,7 @@ import {
   RoleName,
   UserStatus,
 } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
-
+import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const DEMO_PASSWORD = 'TestPass123';
@@ -208,11 +207,11 @@ async function seedRolesAndPermissions() {
 
 async function upsertDemoUser(input: DemoUserInput) {
   const user = await prisma.user.upsert({
-    where: { phone: input.phone },
+    where: { uuid: input.uuid },
     update: {
-      uuid: input.uuid,
       fullName: input.fullName,
       email: input.email,
+      phone: input.phone,
       passwordHash: input.passwordHash,
       status: input.status ?? UserStatus.ACTIVE,
     },
@@ -266,7 +265,7 @@ async function upsertDemoData() {
     uuid: ids.admin,
     fullName: 'Admin Demo',
     email: 'admin@learnnova.test',
-    phone: '+989120000001',
+    phone: '09120000001',
     roles: [RoleName.ADMIN],
     passwordHash,
     walletBalance: '10000000.00',
@@ -276,7 +275,7 @@ async function upsertDemoData() {
     uuid: ids.teacher,
     fullName: 'Teacher Demo',
     email: 'teacher@learnnova.test',
-    phone: '+989120000002',
+    phone: '09120000002',
     roles: [RoleName.TEACHER, RoleName.STUDENT],
     passwordHash,
     walletBalance: '500000.00',
@@ -286,7 +285,7 @@ async function upsertDemoData() {
     uuid: ids.student,
     fullName: 'Student Demo',
     email: 'student@learnnova.test',
-    phone: '+989120000003',
+    phone: '09120000003',
     roles: [RoleName.STUDENT],
     passwordHash,
     walletBalance: '250000.00',
@@ -296,7 +295,7 @@ async function upsertDemoData() {
     uuid: ids.buyer,
     fullName: 'Buyer Demo',
     email: 'buyer@learnnova.test',
-    phone: '+989120000004',
+    phone: '09120000004',
     roles: [RoleName.STUDENT],
     passwordHash,
     walletBalance: '750000.00',
@@ -306,7 +305,7 @@ async function upsertDemoData() {
     uuid: ids.support,
     fullName: 'Support Demo',
     email: 'support@learnnova.test',
-    phone: '+989120000005',
+    phone: '09120000005',
     roles: [RoleName.SUPPORT, RoleName.STUDENT],
     passwordHash,
     walletBalance: '0.00',

@@ -5,7 +5,7 @@ const SOCKET_BASE_URL = process.env.SOCKET_BASE_URL ?? 'http://localhost:3001/qu
 
 const demo = {
   password: 'TestPass123',
-  buyerPhone: '+989120000004',
+  buyerPhone: '09120000004',
   paidCourseUuid: '00000000-0000-4000-8000-000000000102',
   tenQuestionQuizUuid: '00000000-0000-4000-8000-000000000603',
 };

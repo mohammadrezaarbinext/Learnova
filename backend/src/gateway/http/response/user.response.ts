@@ -16,7 +16,7 @@ export class UserResponse {
   @ApiPropertyOptional({ example: 'sara@learnnova.com', nullable: true })
   email: string | null;
 
-  @ApiProperty({ example: '+989121234567' })
+  @ApiProperty({ example: '09920206332' })
   phone: string;
 
   @ApiProperty({ enum: UserStatus, example: UserStatus.ACTIVE })

@@ -1,9 +1,10 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+import { toIranianPhone } from '../../../common/utils/phone.util';
 import { LoginRequest } from '../../../gateway/http/request/auth/login.request';
-import { ChangePasswordRequest, OtpRequest, RegisterRequest } from '../../../gateway/http/request/auth/register.request';
+import { ChangePasswordRequest, OtpRequest, RegisterRequest, VerifyOtpRequest } from '../../../gateway/http/request/auth/register.request';
 import { AuthEntity, MessageEntity, OtpEntity } from '../entity/auth.entity';
 import { AuthRepository } from '../entity/auth.repository';
 import { LoginHandler } from '../handler/login.handler';
@@ -26,40 +27,46 @@ export class AuthService {
   ) {}
 
   async requestOtp(dto: OtpRequest): Promise<OtpEntity> {
-    const user = await this.usersService.findByPhone(dto.phone);
+    const phone = toIranianPhone(dto.phone);
+    await this.validateOtpTarget(phone, dto.type);
+    return this.otpService.generate(phone, dto.type);
+  }
 
-    if (dto.type === 'REGISTER' && user) {
-      throw new ConflictException('This account already exists');
-    }
+  async verifyOtp(dto: VerifyOtpRequest): Promise<MessageEntity> {
+    const phone = toIranianPhone(dto.phone);
+    await this.validateOtpTarget(phone, dto.type);
+    await this.otpService.verify(phone, dto.type, dto.otp);
 
-    if ((dto.type === 'LOGIN' || dto.type === 'CHANGE_PASSWORD') && !user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return this.otpService.generate(dto.phone, dto.type);
+    return {
+      ok: true,
+      message: 'OTP verified successfully.',
+    };
   }
 
   async register(dto: RegisterRequest): Promise<AuthEntity> {
-    await this.otpService.verifyAndConsume(dto.phone, 'REGISTER', dto.otp);
+    const phone = toIranianPhone(dto.phone);
+    await this.otpService.verifyAndConsume(phone, 'REGISTER', dto.otp);
 
-    const existingUser = await this.usersService.findByPhone(dto.phone);
+    const existingUser = await this.usersService.findByPhone(phone);
     if (existingUser) {
       throw new ConflictException('This account already exists');
     }
 
-    const user = await this.registerHandler.register(dto);
+    const user = await this.registerHandler.register({ ...dto, phone });
     return this.createAuthResponse(user);
   }
 
   async login(dto: LoginRequest): Promise<AuthEntity> {
+    const phone = toIranianPhone(dto.phone);
+
     if (dto.password) {
-      const user = await this.loginHandler.login({ ...dto, password: dto.password });
+      const user = await this.loginHandler.login({ ...dto, phone, password: dto.password });
       return this.createAuthResponse(user);
     }
 
     if (dto.otp) {
-      await this.otpService.verifyAndConsume(dto.phone, 'LOGIN', dto.otp);
-      const user = await this.loginHandler.loginWithVerifiedPhone(dto.phone);
+      await this.otpService.verifyAndConsume(phone, 'LOGIN', dto.otp);
+      const user = await this.loginHandler.loginWithVerifiedPhone(phone);
       return this.createAuthResponse(user);
     }
 
@@ -67,9 +74,10 @@ export class AuthService {
   }
 
   async changePassword(dto: ChangePasswordRequest): Promise<MessageEntity> {
-    await this.otpService.verifyAndConsume(dto.phone, 'CHANGE_PASSWORD', dto.otp);
+    const phone = toIranianPhone(dto.phone);
+    await this.otpService.verifyAndConsume(phone, 'CHANGE_PASSWORD', dto.otp);
 
-    const user = await this.usersService.findByPhoneWithPassword(dto.phone);
+    const user = await this.usersService.findByPhoneWithPassword(phone);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -108,5 +116,17 @@ export class AuthService {
     );
 
     return { accessToken, user };
+  }
+
+  private async validateOtpTarget(phone: string, type: VerifyOtpRequest['type']): Promise<void> {
+    const user = await this.usersService.findByPhone(phone);
+
+    if (type === 'REGISTER' && user) {
+      throw new ConflictException('This account already exists');
+    }
+
+    if ((type === 'LOGIN' || type === 'CHANGE_PASSWORD') && !user) {
+      throw new NotFoundException('User not found');
+    }
   }
 }

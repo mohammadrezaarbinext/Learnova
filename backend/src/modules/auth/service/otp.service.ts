@@ -22,11 +22,14 @@ export class OtpService {
   }
 
   async verifyAndConsume(phone: string, type: OtpType, otp: string): Promise<void> {
+    await this.verify(phone, type, otp);
+    await this.authRepository.deleteOtp(phone, type);
+  }
+
+  async verify(phone: string, type: OtpType, otp: string): Promise<void> {
     const storedOtp = await this.authRepository.getOtp(phone, type);
     if (!storedOtp || storedOtp.otp !== otp) {
       throw new UnauthorizedException('Invalid or expired OTP');
     }
-
-    await this.authRepository.deleteOtp(phone, type);
   }
 }

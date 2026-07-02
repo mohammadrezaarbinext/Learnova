@@ -73,6 +73,17 @@ enum QuizAttemptStatus {
   EXPIRED
 }
 
+enum FileType {
+  video
+  image
+  file
+}
+
+enum FileVisibility {
+  public
+  private
+}
+
 model User {
   id           Int        @id @default(autoincrement())
   uuid         String     @unique @default(uuid()) @db.Uuid
@@ -352,12 +363,34 @@ model QuestionAnswer {
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 
-  attempt        QuizAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question       Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attempt        QuizAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
   selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
 
   @@unique([attemptId, questionId])
   @@index([attemptId])
   @@index([questionId])
   @@index([selectedOptionId])
+}
+
+model File {
+  id           Int            @id @default(autoincrement())
+  uuid         String         @unique @default(uuid()) @db.Uuid
+  path         String?
+  key          String?        @unique
+  bucket       String?
+  originalName String
+  mimeType     String
+  size         BigInt
+  type         FileType
+  visibility   FileVisibility
+  ownerUserId  Int?
+  courseId     Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([ownerUserId])
+  @@index([courseId])
+  @@index([type])
+  @@index([visibility])
 }

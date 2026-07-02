@@ -3,6 +3,10 @@ import { IsInt, IsNotEmpty, IsOptional, IsString, Min, validateSync } from 'clas
 
 class EnvironmentVariables {
   @IsString()
+  @IsOptional()
+  NODE_ENV?: string;
+
+  @IsString()
   @IsNotEmpty()
   DATABASE_URL: string;
 
@@ -35,6 +39,14 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   FRONTEND_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  UPLOAD_DIR?: string;
+
+  @IsString()
+  @IsOptional()
+  PUBLIC_UPLOAD_BASE_URL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

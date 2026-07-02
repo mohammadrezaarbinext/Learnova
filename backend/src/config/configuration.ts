@@ -12,4 +12,8 @@ export default () => ({
   database: {
     url: process.env.DATABASE_URL,
   },
+  storage: {
+    uploadDir: process.env.UPLOAD_DIR ?? './uploads',
+    publicUploadBaseUrl: process.env.PUBLIC_UPLOAD_BASE_URL ?? 'http://localhost:3001/api/uploads',
+  },
 });

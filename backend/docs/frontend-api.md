@@ -35,7 +35,7 @@ Authorization: Bearer <accessToken>
 ## Auth Flow
 
 1. Call `POST /auth/otp` whenever an OTP is needed, with `type` set to `REGISTER`, `LOGIN`, or `CHANGE_PASSWORD`.
-2. Register flow: call `POST /auth/otp` with `type: "REGISTER"`, read the OTP from backend logs, then call `POST /auth/register`.
+2. Register flow: call `POST /auth/otp` with `type: "REGISTER"`, read the OTP from backend logs, call `POST /auth/verify-otp`, then call `POST /auth/register` with phone, OTP, and password.
 3. Login flow: call `POST /auth/login` with phone/password, or call `POST /auth/otp` with `type: "LOGIN"` and then login with phone/OTP.
 4. Store the returned `accessToken` on the client.
 5. Send `Authorization: Bearer <accessToken>` for protected requests.
@@ -47,7 +47,7 @@ The backend stores JWT session metadata in Redis. If the Redis session expires o
 OTP is currently mocked. The backend logs it in the terminal:
 
 ```text
-LearnNova OTP generated | type=REGISTER | phone=+989121234567 | otp=123456 | expiresIn=120s
+LearnNova OTP generated | type=REGISTER | phone=09920206332 | otp=123456 | expiresIn=120s
 ```
 
 ## User Shape
@@ -58,7 +58,7 @@ LearnNova OTP generated | type=REGISTER | phone=+989121234567 | otp=123456 | exp
   "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
   "fullName": "Sara Ahmadi",
   "email": null,
-  "phone": "+989121234567",
+  "phone": "09920206332",
   "status": "ACTIVE",
   "wallet": {
     "id": 1,
@@ -111,7 +111,7 @@ Request:
 
 ```json
 {
-  "phone": "+989121234567",
+  "phone": "09920206332",
   "type": "REGISTER"
 }
 ```
@@ -133,6 +133,33 @@ Response:
 }
 ```
 
+### Verify OTP
+
+```http
+POST /auth/verify-otp
+```
+
+Request:
+
+```json
+{
+  "phone": "09920206332",
+  "type": "REGISTER",
+  "otp": "123456"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "message": "OTP verified successfully."
+}
+```
+
+This endpoint validates the OTP without consuming it. The OTP is consumed by the final `register`, OTP login, or change-password request.
+
 ### Register
 
 ```http
@@ -143,7 +170,7 @@ Request:
 
 ```json
 {
-  "phone": "+989121234567",
+  "phone": "09920206332",
   "otp": "123456",
   "password": "StrongPass123"
 }
@@ -159,9 +186,9 @@ Response:
   "user": {
     "id": 1,
     "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
-    "fullName": "+989121234567",
+    "fullName": "09920206332",
     "email": null,
-    "phone": "+989121234567",
+    "phone": "09920206332",
     "status": "ACTIVE",
     "wallet": {
       "id": 1,
@@ -196,7 +223,7 @@ Request:
 
 ```json
 {
-  "phone": "+989121234567",
+  "phone": "09920206332",
   "password": "StrongPass123"
 }
 ```
@@ -205,7 +232,7 @@ Or:
 
 ```json
 {
-  "phone": "+989121234567",
+  "phone": "09920206332",
   "otp": "123456"
 }
 ```
@@ -220,7 +247,7 @@ Response:
     "uuid": "df030de8-6479-4837-a03d-65836fa80d60",
     "fullName": "Sara Ahmadi",
     "email": "sara@learnnova.com",
-    "phone": "+989121234567",
+    "phone": "09920206332",
     "status": "ACTIVE",
     "wallet": {
       "id": 1,
@@ -249,7 +276,7 @@ Request:
 
 ```json
 {
-  "phone": "+989121234567",
+  "phone": "09920206332",
   "otp": "123456",
   "password": "NewStrongPass123"
 }
@@ -334,7 +361,7 @@ Request fields are optional:
 {
   "fullName": "Updated Name",
   "email": "updated@learnnova.com",
-  "phone": "+989120000000",
+  "phone": "09120000000",
   "status": "ACTIVE"
 }
 ```

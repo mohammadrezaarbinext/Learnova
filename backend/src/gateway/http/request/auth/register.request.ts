@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsString, Matches, MinLength } from 'class-validator';
+import { IRANIAN_MOBILE_REGEX, normalizeIranianPhone } from '../../../../common/utils/phone.util';
 import { OtpType } from '../../../../modules/auth/entity/auth.entity';
 
 export enum OtpRequestType {
@@ -9,8 +11,10 @@ export enum OtpRequestType {
 }
 
 export class OtpRequest {
-  @ApiProperty({ example: '+989121234567' })
+  @ApiProperty({ example: '09920206332' })
+  @Transform(({ value }) => normalizeIranianPhone(value))
   @IsString()
+  @Matches(IRANIAN_MOBILE_REGEX, { message: 'phone must be an Iranian mobile number in 09xxxxxxxxx format' })
   phone: string;
 
   @ApiProperty({ enum: OtpRequestType, example: OtpRequestType.REGISTER })
@@ -19,8 +23,10 @@ export class OtpRequest {
 }
 
 export class RegisterRequest {
-  @ApiProperty({ example: '+989121234567' })
+  @ApiProperty({ example: '09920206332' })
+  @Transform(({ value }) => normalizeIranianPhone(value))
   @IsString()
+  @Matches(IRANIAN_MOBILE_REGEX, { message: 'phone must be an Iranian mobile number in 09xxxxxxxxx format' })
   phone: string;
 
   @ApiProperty({ example: '123456' })
@@ -33,9 +39,27 @@ export class RegisterRequest {
   password: string;
 }
 
-export class ChangePasswordRequest {
-  @ApiProperty({ example: '+989121234567' })
+export class VerifyOtpRequest {
+  @ApiProperty({ example: '09920206332' })
+  @Transform(({ value }) => normalizeIranianPhone(value))
   @IsString()
+  @Matches(IRANIAN_MOBILE_REGEX, { message: 'phone must be an Iranian mobile number in 09xxxxxxxxx format' })
+  phone: string;
+
+  @ApiProperty({ enum: OtpRequestType, example: OtpRequestType.REGISTER })
+  @IsEnum(OtpRequestType)
+  type: OtpType;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  otp: string;
+}
+
+export class ChangePasswordRequest {
+  @ApiProperty({ example: '09920206332' })
+  @Transform(({ value }) => normalizeIranianPhone(value))
+  @IsString()
+  @Matches(IRANIAN_MOBILE_REGEX, { message: 'phone must be an Iranian mobile number in 09xxxxxxxxx format' })
   phone: string;
 
   @ApiProperty({ example: '123456' })
